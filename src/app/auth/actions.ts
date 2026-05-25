@@ -48,3 +48,41 @@ export async function logout() {
   await supabase.auth.signOut()
   redirect('/')
 }
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim()
+  if (!email) {
+    redirect('/auth/login?error=Enter+your+email+first%2C+then+click+%22Forgot+password%3F%22')
+  }
+  const supabase = await createClient()
+  // Send the user through our existing OAuth callback so the PKCE code is
+  // exchanged into a session, then forward them to the update-password page.
+  const redirectTo = process.env.NEXT_PUBLIC_SITE_URL
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/auth/update-password`
+    : undefined
+  await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+  // Confirm to the user regardless of whether the account exists. Supabase's
+  // API doesn't reveal account existence either way, so this is safe.
+  redirect(`/auth/login?reset_sent=${encodeURIComponent(email)}`)
+}
+
+export async function updatePassword(formData: FormData) {
+  const password = String(formData.get('password') ?? '')
+  const confirm = String(formData.get('confirm') ?? '')
+  if (password.length < 8) {
+    redirect('/auth/update-password?error=Password+must+be+at+least+8+characters')
+  }
+  if (password !== confirm) {
+    redirect('/auth/update-password?error=Passwords+do+not+match')
+  }
+  const supabase = await createClient()
+  const { data: userData, error: userErr } = await supabase.auth.getUser()
+  if (userErr || !userData.user) {
+    redirect('/auth/login?error=Reset+link+expired.+Please+request+a+new+one.')
+  }
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) {
+    redirect(`/auth/update-password?error=${encodeURIComponent(error.message)}`)
+  }
+  redirect('/?notice=Password+updated')
+}

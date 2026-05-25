@@ -1,10 +1,12 @@
 import Link from 'next/link'
-import { login } from '@/app/auth/actions'
+import { login, requestPasswordReset } from '@/app/auth/actions'
 
-type Props = { searchParams: Promise<{ error?: string }> }
+type Props = {
+  searchParams: Promise<{ error?: string; reset_sent?: string }>
+}
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { error } = await searchParams
+  const { error, reset_sent: resetSent } = await searchParams
   return (
     <div className="max-w-sm mx-auto py-12">
       <h1 className="text-2xl font-semibold mb-6">Log in</h1>
@@ -13,7 +15,13 @@ export default async function LoginPage({ searchParams }: Props) {
           {error}
         </p>
       )}
-      <form action={login} className="space-y-4">
+      {resetSent && (
+        <p className="mb-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
+          A password reset link has been sent to <strong>{resetSent}</strong>.
+          Check your inbox (and spam folder).
+        </p>
+      )}
+      <form className="space-y-4">
         <label className="block">
           <span className="text-sm">Email</span>
           <input
@@ -34,8 +42,21 @@ export default async function LoginPage({ searchParams }: Props) {
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>
+        <div className="text-right">
+          {/* Submits the same form to the reset action — uses the email above.
+              formNoValidate so the required password field doesn't block it. */}
+          <button
+            type="submit"
+            formAction={requestPasswordReset}
+            formNoValidate
+            className="text-sm underline text-[var(--color-muted)] hover:opacity-80"
+          >
+            Forgot password?
+          </button>
+        </div>
         <button
           type="submit"
+          formAction={login}
           className="w-full rounded bg-[var(--color-accent)] text-white py-2 hover:opacity-90"
         >
           Log in
