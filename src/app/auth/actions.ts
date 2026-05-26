@@ -1,7 +1,15 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+
+async function getSiteOrigin(): Promise<string> {
+  const h = await headers()
+  const host = h.get('x-forwarded-host') ?? h.get('host')
+  const proto = h.get('x-forwarded-proto') ?? 'http'
+  return `${proto}://${host}`
+}
 
 export async function login(formData: FormData) {
   const email = String(formData.get('email') ?? '')
@@ -27,9 +35,7 @@ export async function signup(formData: FormData) {
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: process.env.NEXT_PUBLIC_SITE_URL
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-        : undefined,
+      emailRedirectTo: `${await getSiteOrigin()}/auth/callback`,
     },
   })
   if (error) {
@@ -57,9 +63,7 @@ export async function requestPasswordReset(formData: FormData) {
   const supabase = await createClient()
   // Send the user through our existing OAuth callback so the PKCE code is
   // exchanged into a session, then forward them to the update-password page.
-  const redirectTo = process.env.NEXT_PUBLIC_SITE_URL
-    ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/auth/update-password`
-    : undefined
+  const redirectTo = `${await getSiteOrigin()}/auth/callback?next=/auth/update-password`
   await supabase.auth.resetPasswordForEmail(email, { redirectTo })
   // Confirm to the user regardless of whether the account exists. Supabase's
   // API doesn't reveal account existence either way, so this is safe.
