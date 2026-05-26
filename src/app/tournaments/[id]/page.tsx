@@ -186,7 +186,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           </div>
         ) : (
           <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
-            {displayEntries.map((e, idx) => {
+            {displayEntries.map((e) => {
               const isMine = !!myEntryId && e.id === myEntryId
               return (
                 <li
@@ -195,8 +195,12 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {revealSeeds && (
-                      <span className="text-xs text-[var(--color-muted)] w-6">
-                        {e.seed ?? idx + 1}
+                      // Only show a number for entries the TD has explicitly
+                      // seeded. Unseeded entries get a placeholder dash so the
+                      // column stays aligned without implying they have a
+                      // seed — they'll land in random bracket positions.
+                      <span className="text-xs text-[var(--color-muted)] w-6 text-right">
+                        {e.seed ?? '—'}
                       </span>
                     )}
                     <span className="truncate">{e.display}</span>

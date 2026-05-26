@@ -411,17 +411,27 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
       )}
 
       <section>
-        <h2 className="font-medium mb-3">
+        <h2 className="font-medium mb-1">
           Current entries{' '}
           <span className="text-sm text-[var(--color-muted)] font-normal">({entries.length})</span>
         </h2>
+        {entries.length > 0 && (() => {
+          const seededCount = entries.filter((e) => e.seed != null).length
+          const unseededCount = entries.length - seededCount
+          return (
+            <p className="text-xs text-[var(--color-muted)] mb-3">
+              {seededCount} seeded · {unseededCount} unseeded (will be placed
+              randomly in the draw).
+            </p>
+          )
+        })()}
         {entries.length === 0 ? (
           <div className="rounded border border-dashed border-[var(--color-border)] p-6 text-center text-[var(--color-muted)]">
             No entries yet.
           </div>
         ) : (
           <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
-            {entries.map((e, idx) => {
+            {entries.map((e) => {
               // A pending team invite: the captain signed up with a partner,
               // partner hasn't accepted yet. TD can confirm on behalf of the
               // partner (e.g., captain told the TD their partner agreed).
@@ -430,11 +440,11 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               return (
                 <li key={e.id} className="px-4 py-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    {/* Show position for every entry, not just seeded ones —
-                        unseeded ones fall back to their alphabetical/created
-                        order from load-entries. Stopping at the last seeded
-                        row made the list look truncated. */}
-                    <span className="text-xs text-[var(--color-muted)] w-6">{e.seed ?? idx + 1}</span>
+                    {/* Show the seed only for explicitly seeded entries. A
+                        dash for unseeded keeps the column aligned without
+                        implying a seed — those entries get random bracket
+                        positions when the draw is generated. */}
+                    <span className="text-xs text-[var(--color-muted)] w-6 text-right">{e.seed ?? '—'}</span>
                     <span className="truncate">{e.display}</span>
                     {e.added_by_td_id && (
                       <span className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)]">
