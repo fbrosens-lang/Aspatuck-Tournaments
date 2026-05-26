@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { formatDateUS } from '@/lib/dates'
 import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
 import { addGuest } from './actions'
@@ -71,8 +72,13 @@ export default async function ParticipantsPage({ params, searchParams }: Props) 
           <label className="block">
             <span className="text-sm">Date of birth (optional)</span>
             <input
-              type="date"
+              type="text"
               name="dob"
+              placeholder="MM/DD/YYYY"
+              inputMode="numeric"
+              autoComplete="bday"
+              pattern="\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}|\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}"
+              title="Type the date as MM/DD/YYYY (e.g. 03/14/1975)"
               className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
             />
           </label>
@@ -112,7 +118,7 @@ export default async function ParticipantsPage({ params, searchParams }: Props) 
                   <td className="px-4 py-2">{p.display_name}</td>
                   <td className="px-4 py-2 text-[var(--color-muted)]">{p.kind}</td>
                   <td className="px-4 py-2 text-[var(--color-muted)]">{p.email ?? ''}</td>
-                  <td className="px-4 py-2 text-[var(--color-muted)]">{p.date_of_birth ?? ''}</td>
+                  <td className="px-4 py-2 text-[var(--color-muted)]">{formatDateUS(p.date_of_birth)}</td>
                 </tr>
               ))}
             </tbody>

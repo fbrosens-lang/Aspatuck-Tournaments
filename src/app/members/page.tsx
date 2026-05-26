@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
 import { byLastName } from '@/lib/names'
+import { formatDateUS } from '@/lib/dates'
 import { createMember, deleteMember } from './actions'
 import Link from 'next/link'
 
@@ -100,8 +101,13 @@ export default async function MembersPage({ searchParams }: Props) {
             <label className="block">
               <span className="text-sm">Date of birth (optional)</span>
               <input
-                type="date"
+                type="text"
                 name="date_of_birth"
+                placeholder="MM/DD/YYYY"
+                inputMode="numeric"
+                autoComplete="bday"
+                pattern="\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}|\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}"
+                title="Type the date as MM/DD/YYYY (e.g. 03/14/1975)"
                 className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
               />
             </label>
@@ -151,7 +157,7 @@ export default async function MembersPage({ searchParams }: Props) {
                     </a>
                   </td>
                   <td className="px-4 py-2 text-[var(--color-muted)]">
-                    {m.date_of_birth ?? ''}
+                    {formatDateUS(m.date_of_birth)}
                   </td>
                   <td className="px-4 py-2">
                     {m.user_id ? (
