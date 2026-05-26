@@ -1,3 +1,5 @@
+import { KindAutoSelect } from './KindAutoSelect'
+
 type TournamentRules = {
   bracket_format: 'single_elim' | 'single_elim_consolation'
   match_kind: 'best_of_3' | 'pro_set_8' | 'pro_set_10'
@@ -28,15 +30,16 @@ export function TournamentRulesFields({ mode, initial }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="text-sm">Kind</span>
-          <select
-            name="kind"
-            defaultValue={i?.kind ?? 'singles'}
-            disabled={mode === 'edit'}
-            className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2 disabled:bg-zinc-100"
-          >
-            <option value="singles">singles</option>
-            <option value="doubles">doubles</option>
-          </select>
+          <KindAutoSelect
+            initial={i?.kind}
+            autoFromName={mode === 'create'}
+          />
+          {mode === 'edit' && (
+            <span className="block mt-1 text-xs text-[var(--color-muted)]">
+              Changing the kind is only allowed while there are no active
+              entries.
+            </span>
+          )}
         </label>
         <label className="block">
           <span className="text-sm">Bracket format</span>

@@ -116,6 +116,7 @@ export async function updateTournament(formData: FormData) {
     p_end_date: str(formData.get('end_date')),
     p_registration_deadline: nullableTimestamp(formData.get('registration_deadline')),
     p_status: str(formData.get('status')),
+    p_kind: str(formData.get('kind')) || 'singles',
     p_bracket_format: str(formData.get('bracket_format')) || 'single_elim',
     p_match_kind: str(formData.get('match_kind')) || 'best_of_3',
     p_final_set_format: str(formData.get('final_set_format')) || 'super_tb_10',
