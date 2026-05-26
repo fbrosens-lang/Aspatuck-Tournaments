@@ -105,20 +105,26 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
       )}
       {ok && (
         <p className="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
-          {ok === 'generated' && 'Draw generated with the current roster.'}
-          {ok === 'regenerated' && 'Draw regenerated with the current roster.'}
-          {ok === 'cleared' &&
-            'Draw cleared. Sign-ups are open again — players can register and you can regenerate when you’re ready.'}
-          {ok === 'team_accepted' &&
-            'Team invite accepted on behalf of the partner. The entry is now confirmed.'}
-          {ok === 'team_declined' &&
-            'Team invite declined on behalf of the partner. The entry has been withdrawn.'}
-          {ok !== 'generated' &&
-            ok !== 'regenerated' &&
-            ok !== 'cleared' &&
-            ok !== 'team_accepted' &&
-            ok !== 'team_declined' &&
-            'Saved.'}
+          {(() => {
+            if (ok === 'generated') return 'Draw generated with the current roster.'
+            if (ok === 'regenerated') return 'Draw regenerated with the current roster.'
+            if (ok === 'cleared')
+              return 'Draw cleared. Sign-ups are open again — players can register and you can regenerate when you’re ready.'
+            if (ok === 'team_accepted')
+              return 'Team invite accepted on behalf of the partner. The entry is now confirmed.'
+            if (ok === 'team_declined')
+              return 'Team invite declined on behalf of the partner. The entry has been withdrawn.'
+            if (ok.startsWith('added:')) {
+              const name = decodeURIComponent(ok.slice('added:'.length))
+              return (
+                <>
+                  Added <strong>{name}</strong> to the roster. Pick another to
+                  add more.
+                </>
+              )
+            }
+            return 'Saved.'
+          })()}
         </p>
       )}
 
@@ -223,6 +229,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   required
                   placeholder="Type a name…"
                   ariaLabel="Club member"
+                  submitOnPick
                 />
               </label>
               <label className="flex items-center gap-2 text-sm">
@@ -256,6 +263,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   required
                   placeholder="Type a name…"
                   ariaLabel="Registered user"
+                  submitOnPick
                 />
               </label>
               <label className="flex items-center gap-2 text-sm">
@@ -291,6 +299,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                     required
                     placeholder="Type a name…"
                     ariaLabel="Guest participant"
+                    submitOnPick
                   />
                 </label>
                 <label className="flex items-center gap-2 text-sm">

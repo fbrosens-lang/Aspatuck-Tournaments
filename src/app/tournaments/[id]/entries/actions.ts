@@ -12,6 +12,12 @@ function backUrl(tid: string, error?: string, ok?: string) {
   return `/tournaments/${tid}/entries${s ? `?${s}` : ''}`
 }
 
+function addedOk(name: string) {
+  // Embed the display name in the ok param so the page can render
+  // "Added <name> to the roster." instead of a bland "Saved."
+  return `added:${encodeURIComponent(name)}`
+}
+
 export async function tdEnterMember(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const userId = String(formData.get('user_id') ?? '')
@@ -20,6 +26,11 @@ export async function tdEnterMember(formData: FormData) {
     redirect(backUrl(tid, 'Pick a registered user from the list.'))
   }
   const supabase = await createClient()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', userId)
+    .maybeSingle()
   const { error } = await supabase.rpc('td_enter_member', {
     p_tournament_id: tid,
     p_user_id: userId,
@@ -27,7 +38,8 @@ export async function tdEnterMember(formData: FormData) {
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
-  redirect(backUrl(tid, undefined, '1'))
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, addedOk(profile?.full_name ?? 'Entry')))
 }
 
 export async function tdEnterClubMember(formData: FormData) {
@@ -38,6 +50,11 @@ export async function tdEnterClubMember(formData: FormData) {
     redirect(backUrl(tid, 'Pick a member from the directory list.'))
   }
   const supabase = await createClient()
+  const { data: cm } = await supabase
+    .from('club_members')
+    .select('full_name')
+    .eq('id', clubMemberId)
+    .maybeSingle()
   const { error } = await supabase.rpc('td_enter_club_member', {
     p_tournament_id: tid,
     p_club_member_id: clubMemberId,
@@ -45,7 +62,8 @@ export async function tdEnterClubMember(formData: FormData) {
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
-  redirect(backUrl(tid, undefined, '1'))
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, addedOk(cm?.full_name ?? 'Entry')))
 }
 
 export async function tdEnterTeamFromClubMembers(formData: FormData) {
@@ -60,6 +78,12 @@ export async function tdEnterTeamFromClubMembers(formData: FormData) {
     redirect(backUrl(tid, 'Captain and partner must be different.'))
   }
   const supabase = await createClient()
+  const { data: cms } = await supabase
+    .from('club_members')
+    .select('id, full_name')
+    .in('id', [captainId, partnerId])
+  const captainName = cms?.find((m) => m.id === captainId)?.full_name ?? 'captain'
+  const partnerName = cms?.find((m) => m.id === partnerId)?.full_name ?? 'partner'
   const { error } = await supabase.rpc('td_enter_team_from_club_members', {
     p_tournament_id: tid,
     p_captain_club_member_id: captainId,
@@ -68,7 +92,8 @@ export async function tdEnterTeamFromClubMembers(formData: FormData) {
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
-  redirect(backUrl(tid, undefined, '1'))
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, addedOk(`${captainName} & ${partnerName}`)))
 }
 
 export async function tdEnterGuest(formData: FormData) {
@@ -79,6 +104,11 @@ export async function tdEnterGuest(formData: FormData) {
     redirect(backUrl(tid, 'Pick a guest from the list.'))
   }
   const supabase = await createClient()
+  const { data: part } = await supabase
+    .from('participants')
+    .select('display_name')
+    .eq('id', participantId)
+    .maybeSingle()
   const { error } = await supabase.rpc('td_enter_guest', {
     p_tournament_id: tid,
     p_participant_id: participantId,
@@ -86,7 +116,8 @@ export async function tdEnterGuest(formData: FormData) {
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
-  redirect(backUrl(tid, undefined, '1'))
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, addedOk(part?.display_name ?? 'Guest')))
 }
 
 export async function tdAcceptTeamInvite(formData: FormData) {

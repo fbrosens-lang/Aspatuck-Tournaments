@@ -1,6 +1,13 @@
 'use client'
 
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react'
 
 // True if every character of needle appears in haystack in order (not
 // necessarily contiguously). Lets "gabi" match "gabriel" so nicknames and
@@ -33,6 +40,11 @@ type Props = {
    *  to show an entire club directory without scrolling past invisible
    *  entries, low enough that the DOM stays cheap. */
   maxResults?: number
+  /** If true, picking an option with Enter also submits the closest form.
+   *  Useful for single-Combobox forms where pressing Enter twice (once to
+   *  pick, once to submit) is the most common mistake. Click-to-pick still
+   *  requires the user to hit the submit button separately. */
+  submitOnPick?: boolean
 }
 
 /**
@@ -55,12 +67,17 @@ export function Combobox({
   placeholder,
   ariaLabel,
   maxResults = 500,
+  submitOnPick = false,
 }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [picked, setPicked] = useState<ComboboxItem | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const mouseDownInListbox = useRef(false)
+  // Holds the form to submit on the next render that has the picked value
+  // committed to the hidden field. requestSubmit() before commit would
+  // submit the empty value, so we defer until the useEffect fires.
+  const pendingSubmitFormRef = useRef<HTMLFormElement | null>(null)
   const reactId = useId()
   const listId = `${reactId}-list`
 
@@ -110,6 +127,9 @@ export function Combobox({
     } else if (e.key === 'Enter') {
       if (open && filtered[activeIndex]) {
         e.preventDefault()
+        if (submitOnPick) {
+          pendingSubmitFormRef.current = e.currentTarget.form
+        }
         pick(filtered[activeIndex])
       }
     } else if (e.key === 'Escape') {
@@ -121,6 +141,18 @@ export function Combobox({
   // until the user actually chooses from the list — so server actions can
   // distinguish "typed nothing" from "typed but didn't pick".
   const hiddenValue = picked && picked.label === query ? picked.value : ''
+
+  // If pick-via-Enter happened with submitOnPick on, wait until the picked
+  // value has flowed through render into the hidden field, then submit the
+  // form. Submitting from inside the Enter handler would race the state
+  // commit and post an empty value.
+  useEffect(() => {
+    if (pendingSubmitFormRef.current && hiddenValue) {
+      const form = pendingSubmitFormRef.current
+      pendingSubmitFormRef.current = null
+      form.requestSubmit()
+    }
+  }, [hiddenValue])
 
   return (
     <div className="relative">
