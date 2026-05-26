@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
 import {
+  saveSeeds,
   tdAcceptTeamInvite,
   tdDeclineTeamInvite,
   tdEnterMember,
@@ -114,6 +115,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               return 'Team invite accepted on behalf of the partner. The entry is now confirmed.'
             if (ok === 'team_declined')
               return 'Team invite declined on behalf of the partner. The entry has been withdrawn.'
+            if (ok === 'seeded') return 'Seeds saved.'
             if (ok.startsWith('added:')) {
               const name = decodeURIComponent(ok.slice('added:'.length))
               return (
@@ -370,6 +372,44 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         </section>
       )}
 
+      {entries.length > 0 && (
+        <section className="bg-white border border-[var(--color-border)] rounded p-4">
+          <h2 className="font-medium">Seed entries</h2>
+          <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
+            Assign seed numbers (1, 2, 3, …) to rank entries before generating
+            the draw. Lower numbers are placed first in the bracket; leave
+            blank for entries you don&apos;t want to seed.
+            {drawExists &&
+              ' Regenerate the draw above to apply seed changes to bracket positions.'}
+          </p>
+          <form action={saveSeeds} className="space-y-3">
+            <input type="hidden" name="tournament_id" value={id} />
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+              {entries.map((e) => (
+                <li key={e.id} className="flex items-center gap-2 py-1">
+                  <input
+                    type="number"
+                    name={`seed_${e.id}`}
+                    defaultValue={e.seed ?? ''}
+                    min={1}
+                    inputMode="numeric"
+                    aria-label={`Seed for ${e.display}`}
+                    className="w-16 rounded border border-[var(--color-border)] px-2 py-1 text-sm"
+                  />
+                  <span className="text-sm truncate">{e.display}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="submit"
+              className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+            >
+              Save seeds
+            </button>
+          </form>
+        </section>
+      )}
+
       <section>
         <h2 className="font-medium mb-3">
           Current entries{' '}
@@ -381,7 +421,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           </div>
         ) : (
           <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
-            {entries.map((e) => {
+            {entries.map((e, idx) => {
               // A pending team invite: the captain signed up with a partner,
               // partner hasn't accepted yet. TD can confirm on behalf of the
               // partner (e.g., captain told the TD their partner agreed).
@@ -390,7 +430,11 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               return (
                 <li key={e.id} className="px-4 py-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xs text-[var(--color-muted)] w-6">{e.seed ?? ''}</span>
+                    {/* Show position for every entry, not just seeded ones —
+                        unseeded ones fall back to their alphabetical/created
+                        order from load-entries. Stopping at the last seeded
+                        row made the list look truncated. */}
+                    <span className="text-xs text-[var(--color-muted)] w-6">{e.seed ?? idx + 1}</span>
                     <span className="truncate">{e.display}</span>
                     {e.added_by_td_id && (
                       <span className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)]">

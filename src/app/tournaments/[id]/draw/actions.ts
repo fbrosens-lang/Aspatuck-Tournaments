@@ -70,33 +70,9 @@ export async function replaceParticipant(formData: FormData) {
   redirect(backUrl(tid, undefined, 'replaced'))
 }
 
-export async function setSeeds(formData: FormData) {
-  const tid = String(formData.get('tournament_id') ?? '')
-  const seeds: { entry_id: string; seed: number | null }[] = []
-  for (const [key, value] of formData.entries()) {
-    if (!key.startsWith('seed_')) continue
-    const entryId = key.slice('seed_'.length)
-    const raw = String(value).trim()
-    if (raw === '') {
-      seeds.push({ entry_id: entryId, seed: null })
-      continue
-    }
-    const n = Number(raw)
-    if (!Number.isInteger(n) || n < 1) {
-      redirect(backUrl(tid, `seed "${raw}" must be a positive integer`))
-    }
-    seeds.push({ entry_id: entryId, seed: n })
-  }
-  const supabase = await createClient()
-  const { error } = await supabase.rpc('td_set_entry_seeds', {
-    p_tournament_id: tid,
-    p_seeds: seeds,
-  })
-  if (error) redirect(backUrl(tid, error.message))
-  revalidatePath(`/tournaments/${tid}`)
-  revalidatePath(`/tournaments/${tid}/draw`)
-  redirect(backUrl(tid, undefined, 'seeded'))
-}
+// Note: the setSeeds action lived here when the Seeds form was on /draw.
+// It's now on /entries as saveSeeds (in entries/actions.ts) so the TD
+// can seed in the same place they manage the roster.
 
 export async function substituteFromDirectory(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')

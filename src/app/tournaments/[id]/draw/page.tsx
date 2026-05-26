@@ -12,7 +12,6 @@ import {
   swapEntries,
   replaceParticipant,
   substituteFromDirectory,
-  setSeeds,
 } from './actions'
 
 type Props = {
@@ -94,38 +93,19 @@ export default async function DrawPage({ params, searchParams }: Props) {
         </p>
       )}
 
-      {entries.length > 0 && (
-        <section className="bg-white border border-[var(--color-border)] rounded p-4">
-          <h2 className="font-medium">Seeds</h2>
-          <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
-            Assign seed numbers (1, 2, 3, …) to rank entries. Lower numbers go
-            first; blank entries are placed after the seeded ones.
-            {hasDraw && ' Regenerate the draw to apply seed changes to bracket positions.'}
-          </p>
-          <form action={setSeeds} className="space-y-2">
-            <input type="hidden" name="tournament_id" value={id} />
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
-              {entries.map((e) => (
-                <li key={e.id} className="flex items-center gap-2 py-1">
-                  <input
-                    type="number"
-                    name={`seed_${e.id}`}
-                    defaultValue={e.seed ?? ''}
-                    min={1}
-                    inputMode="numeric"
-                    className="w-16 rounded border border-[var(--color-border)] px-2 py-1 text-sm"
-                  />
-                  <span className="text-sm truncate">{e.display}</span>
-                </li>
-              ))}
-            </ul>
-            <button
-              type="submit"
-              className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+      {entries.length > 0 && !hasDraw && (
+        <section className="rounded border border-[var(--color-border)] bg-white p-4">
+          <p className="text-sm">
+            Need to seed entries before generating the bracket? Set seeds on
+            the{' '}
+            <Link
+              href={`/tournaments/${id}/entries`}
+              className="underline text-[var(--color-accent)]"
             >
-              Save seeds
-            </button>
-          </form>
+              Roster page
+            </Link>
+            , then come back here to generate the draw.
+          </p>
         </section>
       )}
 
