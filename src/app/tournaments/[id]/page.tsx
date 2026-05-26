@@ -11,6 +11,7 @@ import {
 import { withdrawSelf } from '@/app/tournaments/entry-actions'
 import type { ComboboxItem } from '@/components/Combobox'
 import { byLastName } from '@/lib/names'
+import { formatDateLong } from '@/lib/dates'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -96,7 +97,8 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         <div>
           <h1 className="text-3xl font-semibold">{tournament.name}</h1>
           <p className="text-[var(--color-muted)] mt-1">
-            {tournament.start_date} – {tournament.end_date}
+            Runs from {formatDateLong(tournament.start_date)} to{' '}
+            {formatDateLong(tournament.end_date)}
           </p>
           <p className="text-sm text-[var(--color-muted)] mt-1">
             {tournament.kind} · {tournament.bracket_format} · {tournament.match_kind}

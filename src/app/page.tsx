@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
+import { formatDateLong } from '@/lib/dates'
 import { acceptInvite, declineInvite } from '@/app/tournaments/entry-actions'
 
 const PLAYER_STATUS_BADGE: Record<string, string> = {
@@ -296,7 +297,8 @@ export default async function HomePage() {
                       <div>
                         <h2 className="text-lg font-medium">{t.name}</h2>
                         <p className="text-sm text-[var(--color-muted)]">
-                          {t.start_date} – {t.end_date}
+                          Runs from {formatDateLong(t.start_date)} to{' '}
+                          {formatDateLong(t.end_date)}
                         </p>
                       </div>
                       <span className="text-xs uppercase tracking-wide text-[var(--color-muted)]">

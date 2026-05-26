@@ -73,3 +73,25 @@ export function formatDateUS(value: string | null | undefined): string {
   if (!m) return String(value)
   return `${m[2]}/${m[3]}/${m[1]}`
 }
+
+const MONTHS_LONG = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+/**
+ * Format a stored date (YYYY-MM-DD) as "June 1, 2026". Parses the components
+ * manually so the result is always the calendar date Postgres stored — using
+ * `new Date('2026-06-01')` would parse as UTC midnight and shift a day back
+ * in negative-offset timezones (Eastern time, etc.).
+ */
+export function formatDateLong(value: string | null | undefined): string {
+  if (!value) return ''
+  const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return String(value)
+  const year = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+  if (month < 1 || month > 12) return String(value)
+  return `${MONTHS_LONG[month - 1]} ${day}, ${year}`
+}
