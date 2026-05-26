@@ -198,8 +198,8 @@ export default async function MembersPage({ searchParams }: Props) {
               <tr>
                 <th className="px-4 py-2 font-medium">Name</th>
                 <th className="px-4 py-2 font-medium">Email</th>
-                <th className="px-4 py-2 font-medium">DOB</th>
-                <th className="px-4 py-2 font-medium">Linked</th>
+                {canEdit && <th className="px-4 py-2 font-medium">DOB</th>}
+                {canEdit && <th className="px-4 py-2 font-medium">Linked</th>}
                 {canEdit && <th className="px-4 py-2 font-medium"></th>}
               </tr>
             </thead>
@@ -212,9 +212,12 @@ export default async function MembersPage({ searchParams }: Props) {
                       {m.email}
                     </a>
                   </td>
-                  <td className="px-4 py-2 text-[var(--color-muted)]">
-                    {formatDateUS(m.date_of_birth)}
-                  </td>
+                  {canEdit && (
+                    <td className="px-4 py-2 text-[var(--color-muted)]">
+                      {formatDateUS(m.date_of_birth)}
+                    </td>
+                  )}
+                  {canEdit && (
                   <td className="px-4 py-2">
                     {m.user_id ? (
                       <span className="inline-flex items-center gap-2">
@@ -269,6 +272,7 @@ export default async function MembersPage({ searchParams }: Props) {
                       <span className="text-xs text-[var(--color-muted)]">—</span>
                     )}
                   </td>
+                  )}
                   {canEdit && (
                     <td className="px-4 py-2 text-right">
                       <form
