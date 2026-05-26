@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
 import { byLastName } from '@/lib/names'
@@ -27,9 +28,16 @@ export default async function MembersPage({ searchParams }: Props) {
     query = query.or(`full_name.ilike.${term},email.ilike.${term}`)
   }
 
+  // The directory is logged-in-only — some members don't want their name or
+  // email visible to logged-out visitors. RLS (migration 0033) also enforces
+  // this at the data layer; the redirect is just the front-door UX.
+  const { userId, role } = await getSession()
+  if (!userId) {
+    redirect('/auth/login?error=Please+log+in+to+see+the+club+directory')
+  }
+
   const { data: rawMembers } = await query
   const members = rawMembers ? [...rawMembers].sort(byLastName) : null
-  const { role } = await getSession()
   const canEdit = role === 'tournament_director' || role === 'site_admin'
 
   // Orphan accounts: profiles that aren't yet linked to any directory entry.
