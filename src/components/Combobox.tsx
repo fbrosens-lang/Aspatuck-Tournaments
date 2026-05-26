@@ -27,6 +27,13 @@ type Props = {
  * UI only; the hidden `<input name={name}>` is what the form submits. If the
  * user types something but never picks an option, the hidden field stays
  * empty so server validation can reject it.
+ *
+ * Click-to-select uses the standard "mousedown-inside-listbox" trick: a ref
+ * is set on the listbox's mousedown, the input's blur handler checks the ref
+ * and refuses to close when blur was caused by clicking an option, then the
+ * option's onClick fires pick() normally. This is more reliable than using
+ * onMouseDown + preventDefault on the option (which suppresses the click
+ * event in some browsers and breaks touch).
  */
 export function Combobox({
   items,
@@ -40,7 +47,7 @@ export function Combobox({
   const [open, setOpen] = useState(false)
   const [picked, setPicked] = useState<ComboboxItem | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
-  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mouseDownInListbox = useRef(false)
   const reactId = useId()
   const listId = `${reactId}-list`
 
@@ -67,7 +74,7 @@ export function Combobox({
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setOpen(true)
-      setActiveIndex((i) => Math.min(i + 1, filtered.length - 1))
+      setActiveIndex((i) => Math.min(i + 1, Math.max(filtered.length - 1, 0)))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActiveIndex((i) => Math.max(i - 1, 0))
@@ -82,8 +89,8 @@ export function Combobox({
   }
 
   // The picked value is what the form submits. The hidden field stays empty
-  // until the user actually chooses from the list — so `required` blocks
-  // free-text typing that doesn't match an item.
+  // until the user actually chooses from the list — so server actions can
+  // distinguish "typed nothing" from "typed but didn't pick".
   const hiddenValue = picked && picked.label === query ? picked.value : ''
 
   return (
@@ -107,8 +114,10 @@ export function Combobox({
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => {
-          // Defer close so a click on a dropdown item still registers.
-          blurTimer.current = setTimeout(() => setOpen(false), 120)
+          // If blur was caused by mousing down on an option, keep the
+          // dropdown open long enough for the option's onClick to fire.
+          if (mouseDownInListbox.current) return
+          setOpen(false)
         }}
         onKeyDown={onKeyDown}
         className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
@@ -117,6 +126,22 @@ export function Combobox({
         <ul
           id={listId}
           role="listbox"
+          // Flag the listbox while a pointer is held down inside it, so the
+          // input's blur handler can tell "user is clicking an option" apart
+          // from "user clicked elsewhere".
+          onMouseDown={() => {
+            mouseDownInListbox.current = true
+          }}
+          onMouseUp={() => {
+            mouseDownInListbox.current = false
+          }}
+          // Same trick for touch.
+          onTouchStart={() => {
+            mouseDownInListbox.current = true
+          }}
+          onTouchEnd={() => {
+            mouseDownInListbox.current = false
+          }}
           className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded border border-[var(--color-border)] bg-white shadow"
         >
           {filtered.map((i, idx) => {
@@ -128,12 +153,7 @@ export function Combobox({
                   role="option"
                   aria-selected={isActive}
                   onMouseEnter={() => setActiveIndex(idx)}
-                  onMouseDown={(e) => {
-                    // Prevent the input's blur from firing before pick().
-                    e.preventDefault()
-                    if (blurTimer.current) clearTimeout(blurTimer.current)
-                    pick(i)
-                  }}
+                  onClick={() => pick(i)}
                   className={`w-full text-left px-3 py-1.5 ${
                     isActive ? 'bg-zinc-100' : 'hover:bg-zinc-50'
                   }`}
@@ -150,10 +170,6 @@ export function Combobox({
           })}
         </ul>
       )}
-      {/* The submitted value. Empty until the user picks an option from the
-          dropdown — server actions reject empty with a "Pick from the list"
-          message, distinct from the visible input's `required` (which only
-          enforces non-empty text). */}
       <input type="hidden" name={name} value={hiddenValue} />
     </div>
   )
