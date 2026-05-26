@@ -42,25 +42,30 @@ export default async function LoginPage({ searchParams }: Props) {
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>
-        <div className="text-right">
-          {/* Submits the same form to the reset action — uses the email above.
-              formNoValidate so the required password field doesn't block it. */}
+        {/* "Log in" appears FIRST in DOM order so Enter implicitly submits
+            to login. flex-col-reverse keeps the visual layout the user
+            expects (Forgot password? above the Log in button). */}
+        <div className="flex flex-col-reverse gap-3">
           <button
             type="submit"
-            formAction={requestPasswordReset}
-            formNoValidate
-            className="text-sm underline text-[var(--color-muted)] hover:opacity-80"
+            formAction={login}
+            className="w-full rounded bg-[var(--color-accent)] text-white py-2 hover:opacity-90"
           >
-            Forgot password?
+            Log in
           </button>
+          <div className="text-right">
+            {/* Submits the same form to the reset action — uses the email above.
+                formNoValidate so the required password field doesn't block it. */}
+            <button
+              type="submit"
+              formAction={requestPasswordReset}
+              formNoValidate
+              className="text-sm underline text-[var(--color-muted)] hover:opacity-80"
+            >
+              Forgot password?
+            </button>
+          </div>
         </div>
-        <button
-          type="submit"
-          formAction={login}
-          className="w-full rounded bg-[var(--color-accent)] text-white py-2 hover:opacity-90"
-        >
-          Log in
-        </button>
       </form>
       <p className="mt-4 text-sm text-[var(--color-muted)]">
         Don&apos;t have an account?{' '}
