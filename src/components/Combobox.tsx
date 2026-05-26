@@ -29,7 +29,9 @@ type Props = {
   required?: boolean
   placeholder?: string
   ariaLabel?: string
-  /** Cap on how many results render at once. Defaults to 25. */
+  /** Cap on how many results render at once. Defaults to 500 — high enough
+   *  to show an entire club directory without scrolling past invisible
+   *  entries, low enough that the DOM stays cheap. */
   maxResults?: number
 }
 
@@ -52,7 +54,7 @@ export function Combobox({
   required,
   placeholder,
   ariaLabel,
-  maxResults = 25,
+  maxResults = 500,
 }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
