@@ -77,7 +77,9 @@ export default async function MembersPage({ searchParams }: Props) {
       <header>
         <h1 className="text-2xl font-semibold">Member directory</h1>
         <p className="text-[var(--color-muted)] mt-1">
-          The Aspatuck club roster. Members with a linked account have a green dot.
+          The Aspatuck club roster.
+          {canEdit &&
+            ' Members with a linked account have a green dot in the Linked column.'}
         </p>
       </header>
 

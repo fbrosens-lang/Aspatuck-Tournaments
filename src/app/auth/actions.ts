@@ -31,18 +31,18 @@ export async function signup(formData: FormData) {
   }
   const supabase = await createClient()
 
-  // Block accidental duplicate sign-ups: someone using a new email but the
-  // same name as an existing account would otherwise quietly create a second
-  // user. The RPC allows the signup when the email is already in the club
-  // directory (the TD has explicitly added that person under that email).
-  const { data: collides } = await supabase.rpc('signup_name_collides', {
-    p_full_name: fullName,
+  // The club's policy is "only directory members can self-sign-up; the TD
+  // adds people to the directory first." Anyone whose email isn't on the
+  // roster is bounced to a message explaining how to get added. This both
+  // closes the duplicate-account loophole (Johnny vs John Brosens) and keeps
+  // strangers from ever showing up in /admin.
+  const { data: allowed } = await supabase.rpc('signup_allowed_for_email', {
     p_email: email,
   })
-  if (collides) {
+  if (!allowed) {
     redirect(
       `/auth/signup?error=${encodeURIComponent(
-        "A user with this name already exists. Please log in with the email it was created under (use 'Forgot password?' if you don't remember), or contact the tournament director if you need help.",
+        "This email isn't on the club roster. If you're a member, please sign up with the email the tournament director has on file (or ask them to update it). If you're not a member yet, please contact the tournament director to be added first.",
       )}`,
     )
   }
