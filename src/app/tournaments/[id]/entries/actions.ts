@@ -172,6 +172,23 @@ export async function tdClearDraw(formData: FormData) {
   redirect(backUrl(tid, undefined, 'cleared'))
 }
 
+export async function setSeedsVisibility(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  // The hidden field carries the NEW value (the form flips it based on the
+  // current state) so a single click toggles without a separate Save step.
+  const show = formData.get('show_seeds_publicly') === 'on'
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_set_show_seeds_publicly', {
+    p_tournament_id: tid,
+    p_show: show,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  revalidatePath(`/tournaments/${tid}/manage`)
+  redirect(backUrl(tid, undefined, show ? 'seeds_shown' : 'seeds_hidden'))
+}
+
 export async function saveSeeds(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const seeds: { entry_id: string; seed: number | null }[] = []

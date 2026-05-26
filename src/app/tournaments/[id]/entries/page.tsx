@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
 import {
   saveSeeds,
+  setSeedsVisibility,
   tdAcceptTeamInvite,
   tdDeclineTeamInvite,
   tdEnterMember,
@@ -34,7 +35,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
   const supabase = await createClient()
   const { data: tournament } = await supabase
     .from('tournaments')
-    .select('id, name, kind, draw_status')
+    .select('id, name, kind, draw_status, show_seeds_publicly')
     .eq('id', id)
     .maybeSingle()
   if (!tournament) notFound()
@@ -116,6 +117,10 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             if (ok === 'team_declined')
               return 'Team invite declined on behalf of the partner. The entry has been withdrawn.'
             if (ok === 'seeded') return 'Seeds saved.'
+            if (ok === 'seeds_shown')
+              return 'Seed numbers are now visible to players.'
+            if (ok === 'seeds_hidden')
+              return 'Seed numbers are now hidden from players.'
             if (ok.startsWith('added:')) {
               const name = decodeURIComponent(ok.slice('added:'.length))
               return (
@@ -374,14 +379,40 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
 
       {entries.length > 0 && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4">
-          <h2 className="font-medium">Seed entries</h2>
-          <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
-            Assign seed numbers (1, 2, 3, …) to rank entries before generating
-            the draw. Lower numbers are placed first in the bracket; leave
-            blank for entries you don&apos;t want to seed.
-            {drawExists &&
-              ' Regenerate the draw above to apply seed changes to bracket positions.'}
-          </p>
+          <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+            <div>
+              <h2 className="font-medium">Seed entries</h2>
+              <p className="text-sm text-[var(--color-muted)] mt-1">
+                Assign seed numbers (1, 2, 3, …) to rank entries before
+                generating the draw. Lower numbers are placed first in the
+                bracket; leave blank for entries you don&apos;t want to seed.
+                {drawExists &&
+                  ' Regenerate the draw above to apply seed changes to bracket positions.'}
+              </p>
+            </div>
+            {/* Single-click toggle: the hidden field carries the value we
+                want to set (the inverse of the current state), so submitting
+                the form flips show_seeds_publicly without a separate Save
+                step. Mirrors the checkbox on /manage; both write the same
+                DB column, so the latest choice shows on either page. */}
+            <form action={setSeedsVisibility} className="shrink-0">
+              <input type="hidden" name="tournament_id" value={id} />
+              <input
+                type="hidden"
+                name="show_seeds_publicly"
+                value={tournament.show_seeds_publicly ? 'off' : 'on'}
+              />
+              <button
+                type="submit"
+                className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50"
+                title="Toggle whether players see seed numbers"
+              >
+                {tournament.show_seeds_publicly
+                  ? 'Hide seeds from players'
+                  : 'Show seeds to players'}
+              </button>
+            </form>
+          </div>
           <form action={saveSeeds} className="space-y-3">
             <input type="hidden" name="tournament_id" value={id} />
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
