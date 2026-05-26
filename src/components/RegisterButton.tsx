@@ -5,6 +5,7 @@ import {
   registerTeam,
   withdrawSelf,
 } from '@/app/tournaments/entry-actions'
+import { Combobox, type ComboboxItem } from '@/components/Combobox'
 
 export type MyEntryState =
   | { kind: 'none' }
@@ -19,20 +20,50 @@ export type MyEntryState =
       otherName: string | null
     }
 
+type TournamentStatus = 'draft' | 'open' | 'closed' | 'complete'
+type DrawStatus = 'open' | 'seeded' | 'drawn' | 'in_progress' | 'complete'
+
 type Props = {
   tournamentId: string
   kind: 'singles' | 'doubles'
+  tournamentStatus: TournamentStatus
+  drawStatus: DrawStatus
   canRegister: boolean
   drawIsSet: boolean
   me: MyEntryState
+  /** Suggestions for the doubles partner picker. Each value should be the
+   *  candidate's email (what register_team_for_tournament looks up). */
+  partnerCandidates?: ComboboxItem[]
+}
+
+function closedReason(
+  tournamentStatus: TournamentStatus,
+  drawStatus: DrawStatus,
+): string {
+  if (tournamentStatus === 'draft') {
+    return "Sign-ups aren't open yet. The tournament director will open the tournament when it's ready."
+  }
+  if (tournamentStatus === 'closed') {
+    return 'Sign-ups for this tournament are closed.'
+  }
+  if (tournamentStatus === 'complete') {
+    return 'This tournament is complete.'
+  }
+  if (drawStatus !== 'open') {
+    return 'The draw has been set — new sign-ups are closed. Contact the tournament director to be added.'
+  }
+  return 'Sign-ups are unavailable right now.'
 }
 
 export function RegisterPanel({
   tournamentId,
   kind,
+  tournamentStatus,
+  drawStatus,
   canRegister,
   drawIsSet,
   me,
+  partnerCandidates = [],
 }: Props) {
   if (me.kind === 'singles') {
     return (
@@ -135,47 +166,66 @@ export function RegisterPanel({
     )
   }
 
-  if (!canRegister) return null
+  // me.kind === 'none' — the player hasn't signed up yet.
+  if (!canRegister) {
+    return (
+      <div className="rounded border border-[var(--color-border)] bg-white p-4 space-y-2">
+        <h2 className="font-semibold">Player Sign Up</h2>
+        <p className="text-sm text-[var(--color-muted)]">
+          {closedReason(tournamentStatus, drawStatus)}
+        </p>
+      </div>
+    )
+  }
 
   if (kind === 'doubles') {
     return (
       <form
         action={registerTeam}
-        className="rounded border border-[var(--color-border)] bg-white p-4 space-y-2"
+        className="rounded border border-[var(--color-border)] bg-white p-4 space-y-3"
       >
+        <h2 className="font-semibold">Player Sign Up</h2>
         <input type="hidden" name="tournament_id" value={tournamentId} />
         <label className="block text-sm">
-          <span>Doubles partner&apos;s email</span>
-          <input
-            type="email"
+          <span>Doubles partner</span>
+          <Combobox
             name="partner_email"
+            items={partnerCandidates}
             required
-            placeholder="partner@example.com"
-            className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+            placeholder="Type your partner's name…"
+            ariaLabel="Doubles partner"
           />
         </label>
         <p className="text-xs text-[var(--color-muted)]">
-          Your partner must have an account. They&apos;ll see the invite on the
-          tournament page and on their home page.
+          Pick from members who already have an account. They&apos;ll see the
+          invite on the tournament page and on their home page.
         </p>
         <button
           type="submit"
           className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
         >
-          Invite partner & register
+          Sign up & invite partner
         </button>
       </form>
     )
   }
 
   return (
-    <form action={register}>
+    <form
+      action={register}
+      className="rounded border border-[var(--color-border)] bg-white p-4 space-y-3"
+    >
+      <h2 className="font-semibold">Player Sign Up</h2>
+      <p className="text-sm text-[var(--color-muted)]">
+        Sign up to play in this tournament. You can withdraw later from this
+        same page if your plans change.
+      </p>
       <input type="hidden" name="tournament_id" value={tournamentId} />
       <button
         type="submit"
-        className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 hover:opacity-90"
+        className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
       >
-        Register
+        Sign me up
       </button>
     </form>
   )

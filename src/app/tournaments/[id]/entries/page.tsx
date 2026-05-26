@@ -12,6 +12,7 @@ import {
   tdGenerateDraw,
 } from './actions'
 import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
+import { Combobox, type ComboboxItem } from '@/components/Combobox'
 import { byLastName, lastName } from '@/lib/names'
 
 type Props = {
@@ -65,6 +66,23 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
       )
     : null
 
+  // ----- Combobox item lists (typeahead options) -----
+  const clubMemberItems: ComboboxItem[] = (clubMembers ?? []).map((m) => ({
+    value: m.id,
+    label: m.full_name,
+    sublabel: `${m.email}${m.user_id ? ' · has account' : ''}`,
+  }))
+  const memberItems: ComboboxItem[] = (members ?? []).map((m) => ({
+    value: m.id,
+    label: m.full_name,
+    sublabel: m.contact_email,
+  }))
+  const guestItems: ComboboxItem[] = (guests ?? []).map((g) => ({
+    value: g.id,
+    label: g.display_name,
+    sublabel: g.email ?? undefined,
+  }))
+
   return (
     <div className="space-y-6">
       <header>
@@ -74,7 +92,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         >
           ← Tournament
         </Link>
-        <h1 className="text-2xl font-semibold mt-1">Manage entries · {tournament.name}</h1>
+        <h1 className="text-2xl font-semibold mt-1">Roster · {tournament.name}</h1>
       </header>
 
       {error && (
@@ -173,19 +191,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               <input type="hidden" name="tournament_id" value={id} />
               <label className="block sm:col-span-3">
                 <span className="text-sm">Club member</span>
-                <select
+                <Combobox
                   name="club_member_id"
+                  items={clubMemberItems}
                   required
-                  className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-                >
-                  <option value="">— select —</option>
-                  {clubMembers?.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.full_name} · {m.email}
-                      {m.user_id ? ' · has account' : ''}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Type a name…"
+                  ariaLabel="Club member"
+                />
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="bypass" /> Bypass requirements
@@ -212,18 +224,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               <input type="hidden" name="tournament_id" value={id} />
               <label className="block sm:col-span-3">
                 <span className="text-sm">Account</span>
-                <select
+                <Combobox
                   name="user_id"
+                  items={memberItems}
                   required
-                  className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-                >
-                  <option value="">— select —</option>
-                  {members?.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.full_name} · {m.contact_email}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Type a name…"
+                  ariaLabel="Registered user"
+                />
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="bypass" /> Bypass requirements
@@ -252,19 +259,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 <input type="hidden" name="tournament_id" value={id} />
                 <label className="block sm:col-span-3">
                   <span className="text-sm">Guest participant</span>
-                  <select
+                  <Combobox
                     name="participant_id"
+                    items={guestItems}
                     required
-                    className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-                  >
-                    <option value="">— select —</option>
-                    {guests.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.display_name}
-                        {g.email ? ` · ${g.email}` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Type a name…"
+                    ariaLabel="Guest participant"
+                  />
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" name="bypass" /> Bypass requirements
@@ -303,35 +304,23 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             <input type="hidden" name="tournament_id" value={id} />
             <label className="block">
               <span className="text-sm">Captain</span>
-              <select
+              <Combobox
                 name="captain_club_member_id"
+                items={clubMemberItems}
                 required
-                className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-              >
-                <option value="">— select —</option>
-                {clubMembers?.map((m) => (
-                  <option key={`cap-${m.id}`} value={m.id}>
-                    {m.full_name} · {m.email}
-                    {m.user_id ? ' · has account' : ''}
-                  </option>
-                ))}
-              </select>
+                placeholder="Type a name…"
+                ariaLabel="Captain"
+              />
             </label>
             <label className="block">
               <span className="text-sm">Partner</span>
-              <select
+              <Combobox
                 name="partner_club_member_id"
+                items={clubMemberItems}
                 required
-                className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-              >
-                <option value="">— select —</option>
-                {clubMembers?.map((m) => (
-                  <option key={`par-${m.id}`} value={m.id}>
-                    {m.full_name} · {m.email}
-                    {m.user_id ? ' · has account' : ''}
-                  </option>
-                ))}
-              </select>
+                placeholder="Type a name…"
+                ariaLabel="Partner"
+              />
             </label>
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
               <input type="checkbox" name="bypass" /> Bypass requirements

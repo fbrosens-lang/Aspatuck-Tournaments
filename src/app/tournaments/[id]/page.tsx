@@ -9,6 +9,8 @@ import {
   loadMyEntryState,
 } from '@/app/tournaments/[id]/load-entries'
 import { withdrawSelf } from '@/app/tournaments/entry-actions'
+import type { ComboboxItem } from '@/components/Combobox'
+import { byLastName } from '@/lib/names'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -60,6 +62,28 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   const myEntryId =
     myState.kind === 'singles' || myState.kind === 'team' ? myState.entryId : null
 
+  // Doubles partner picker: load registered users so the player can pick by
+  // name instead of having to type the partner's exact email. Skip the load
+  // for singles tournaments or users who can't currently register.
+  let partnerCandidates: ComboboxItem[] = []
+  if (
+    userId &&
+    tournament.kind === 'doubles' &&
+    canRegister &&
+    myState.kind === 'none'
+  ) {
+    const { data: rawProfiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, contact_email')
+      .neq('id', userId) // can't be your own partner
+    const sorted = rawProfiles ? [...rawProfiles].sort(byLastName) : []
+    partnerCandidates = sorted.map((p) => ({
+      value: p.contact_email,
+      label: p.full_name,
+      sublabel: p.contact_email,
+    }))
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex items-start justify-between">
@@ -100,7 +124,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                 href={`/tournaments/${id}/entries`}
                 className="rounded border border-[var(--color-border)] px-3 py-1.5 hover:bg-zinc-50"
               >
-                Entries
+                Roster
               </Link>
               <Link
                 href={`/tournaments/${id}/draw`}
@@ -129,9 +153,12 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           <RegisterPanel
             tournamentId={id}
             kind={tournament.kind as 'singles' | 'doubles'}
+            tournamentStatus={tournament.status as 'draft' | 'open' | 'closed' | 'complete'}
+            drawStatus={tournament.draw_status as 'open' | 'seeded' | 'drawn' | 'in_progress' | 'complete'}
             canRegister={canRegister}
             drawIsSet={hasDraw}
             me={myState}
+            partnerCandidates={partnerCandidates}
           />
         </section>
       )}

@@ -28,7 +28,7 @@ export async function registerTeam(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const partnerEmail = String(formData.get('partner_email') ?? '').trim()
   if (!partnerEmail) {
-    redirect(backUrl(tid, 'Partner email is required.'))
+    redirect(backUrl(tid, 'Pick your partner from the suggestions.'))
   }
   const supabase = await createClient()
   const { error } = await supabase.rpc('register_team_for_tournament', {
