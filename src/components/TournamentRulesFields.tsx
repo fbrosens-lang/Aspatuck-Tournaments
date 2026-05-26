@@ -9,6 +9,7 @@ type TournamentRules = {
   tiebreak_at: number
   requires_dob: boolean
   registration_deadline_override: string | null
+  show_seeds_publicly: boolean
 }
 
 type Props = {
@@ -135,6 +136,25 @@ export function TournamentRulesFields({ mode, initial }: Props) {
             defaultValue={toLocalInput(i?.registration_deadline_override)}
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
+        </label>
+      </fieldset>
+
+      <fieldset className="rounded border border-[var(--color-border)] p-3">
+        <legend className="text-sm px-1">Visibility</legend>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="show_seeds_publicly"
+            defaultChecked={i?.show_seeds_publicly ?? true}
+            className="mt-0.5"
+          />
+          <span>
+            Show seed numbers to players
+            <span className="block text-xs text-[var(--color-muted)]">
+              When unchecked, players see the entries list and bracket without
+              seed numbers. You can still set and use seeds behind the scenes.
+            </span>
+          </span>
         </label>
       </fieldset>
     </>

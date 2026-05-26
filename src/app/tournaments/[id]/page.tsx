@@ -33,7 +33,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   const { data: tournament } = await supabase
     .from('tournaments')
     .select(
-      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, draw_status, requires_dob',
+      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, draw_status, requires_dob, show_seeds_publicly',
     )
     .eq('id', id)
     .maybeSingle()
@@ -61,6 +61,12 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     tournament.draw_status === 'open'
   const myEntryId =
     myState.kind === 'singles' || myState.kind === 'team' ? myState.entryId : null
+
+  // TDs always see seed numbers; players see them only if the TD opted in.
+  const revealSeeds = td || tournament.show_seeds_publicly
+  const displayEntries = revealSeeds
+    ? entries
+    : entries.map((e) => ({ ...e, seed: null }))
 
   // Doubles partner picker: load registered users so the player can pick by
   // name instead of having to type the partner's exact email. Skip the load
@@ -168,13 +174,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
             ({entries.length})
           </span>
         </h2>
-        {entries.length === 0 ? (
+        {displayEntries.length === 0 ? (
           <div className="rounded border border-dashed border-[var(--color-border)] p-6 text-center text-[var(--color-muted)]">
             No entries yet.
           </div>
         ) : (
           <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
-            {entries.map((e, idx) => {
+            {displayEntries.map((e, idx) => {
               const isMine = !!myEntryId && e.id === myEntryId
               return (
                 <li
@@ -182,9 +188,11 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                   className="px-4 py-2 flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xs text-[var(--color-muted)] w-6">
-                      {e.seed ?? idx + 1}
-                    </span>
+                    {revealSeeds && (
+                      <span className="text-xs text-[var(--color-muted)] w-6">
+                        {e.seed ?? idx + 1}
+                      </span>
+                    )}
                     <span className="truncate">{e.display}</span>
                     {isMine && (
                       <span className="text-xs rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800">
@@ -230,7 +238,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
               status: m.status as 'pending' | 'reported' | 'confirmed' | 'disputed' | 'overridden',
               bracket: m.bracket as 'main' | 'consolation',
             }))}
-            entries={entries}
+            entries={displayEntries}
           />
         </section>
       )}

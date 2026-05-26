@@ -29,6 +29,7 @@ export async function createTournament(formData: FormData) {
     p_tiebreak_at: Number(formData.get('tiebreak_at') ?? 6),
     p_requires_dob: formData.get('requires_dob') === 'on',
     p_registration_deadline_override: nullableTimestamp(formData.get('registration_deadline_override')),
+    p_show_seeds_publicly: formData.get('show_seeds_publicly') === 'on',
   })
   if (error) {
     redirect(`/tournaments/new?error=${encodeURIComponent(error.message)}`)
@@ -126,6 +127,7 @@ export async function updateTournament(formData: FormData) {
     p_requires_dob: formData.get('requires_dob') === 'on',
     p_registration_deadline_override: nullableTimestamp(formData.get('registration_deadline_override')),
     p_draw_status: str(formData.get('draw_status')) || 'open',
+    p_show_seeds_publicly: formData.get('show_seeds_publicly') === 'on',
   })
   if (error) {
     redirect(`/tournaments/${id}/manage?error=${encodeURIComponent(error.message)}`)
