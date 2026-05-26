@@ -39,7 +39,7 @@ export default async function DirectorDashboardPage() {
 
   let tournamentQuery = supabase
     .from('tournaments')
-    .select('id, name, location, start_date, end_date, status, kind, draw_status')
+    .select('id, name, start_date, end_date, status, kind, draw_status')
     .order('start_date', { ascending: false })
   if (role !== 'site_admin') {
     tournamentQuery =
@@ -150,7 +150,7 @@ export default async function DirectorDashboardPage() {
                       {t.name}
                     </Link>
                     <p className="text-sm text-[var(--color-muted)]">
-                      {t.location ?? 'Location TBD'} · {t.start_date} – {t.end_date}
+                      {t.start_date} – {t.end_date}
                     </p>
                     <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mt-1">
                       {t.kind} · Status: {t.status} · Draw: {t.draw_status}

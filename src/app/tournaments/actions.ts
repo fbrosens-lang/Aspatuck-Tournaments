@@ -7,12 +7,6 @@ import { createClient } from '@/lib/supabase/server'
 function str(v: FormDataEntryValue | null) {
   return v === null ? '' : String(v).trim()
 }
-function nullableNumber(v: FormDataEntryValue | null) {
-  const s = str(v)
-  if (s === '') return null
-  const n = Number(s)
-  return Number.isFinite(n) ? n : null
-}
 function nullableTimestamp(v: FormDataEntryValue | null) {
   const s = str(v)
   if (s === '') return null
@@ -23,7 +17,6 @@ export async function createTournament(formData: FormData) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('td_create_tournament', {
     p_name: str(formData.get('name')),
-    p_location: str(formData.get('location')),
     p_start_date: str(formData.get('start_date')),
     p_end_date: str(formData.get('end_date')),
     p_registration_deadline: nullableTimestamp(formData.get('registration_deadline')),
@@ -35,8 +28,6 @@ export async function createTournament(formData: FormData) {
     p_games_per_set: Number(formData.get('games_per_set') ?? 6),
     p_tiebreak_at: Number(formData.get('tiebreak_at') ?? 6),
     p_requires_dob: formData.get('requires_dob') === 'on',
-    p_min_age: nullableNumber(formData.get('min_age')),
-    p_max_age: nullableNumber(formData.get('max_age')),
     p_registration_deadline_override: nullableTimestamp(formData.get('registration_deadline_override')),
   })
   if (error) {
@@ -121,7 +112,6 @@ export async function updateTournament(formData: FormData) {
   const { error } = await supabase.rpc('td_update_tournament', {
     p_id: id,
     p_name: str(formData.get('name')),
-    p_location: str(formData.get('location')),
     p_start_date: str(formData.get('start_date')),
     p_end_date: str(formData.get('end_date')),
     p_registration_deadline: nullableTimestamp(formData.get('registration_deadline')),
@@ -133,8 +123,6 @@ export async function updateTournament(formData: FormData) {
     p_games_per_set: Number(formData.get('games_per_set') ?? 6),
     p_tiebreak_at: Number(formData.get('tiebreak_at') ?? 6),
     p_requires_dob: formData.get('requires_dob') === 'on',
-    p_min_age: nullableNumber(formData.get('min_age')),
-    p_max_age: nullableNumber(formData.get('max_age')),
     p_registration_deadline_override: nullableTimestamp(formData.get('registration_deadline_override')),
     p_draw_status: str(formData.get('draw_status')) || 'open',
   })

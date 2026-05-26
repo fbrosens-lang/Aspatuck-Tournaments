@@ -41,7 +41,7 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
   const { data: t } = await supabase
     .from('tournaments')
     .select(
-      'id, name, location, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, final_set_format, sets_to_win, games_per_set, tiebreak_at, requires_dob, min_age, max_age, registration_deadline_override, draw_status',
+      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, final_set_format, sets_to_win, games_per_set, tiebreak_at, requires_dob, registration_deadline_override, draw_status',
     )
     .eq('id', id)
     .maybeSingle()
@@ -100,14 +100,6 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>
-        <label className="block">
-          <span className="text-sm">Location</span>
-          <input
-            name="location"
-            defaultValue={t.location ?? ''}
-            className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-          />
-        </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="text-sm">Start date</span>
@@ -151,8 +143,6 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
             games_per_set: t.games_per_set,
             tiebreak_at: t.tiebreak_at,
             requires_dob: t.requires_dob,
-            min_age: t.min_age,
-            max_age: t.max_age,
             registration_deadline_override: t.registration_deadline_override,
           }}
         />

@@ -6,8 +6,6 @@ type TournamentRules = {
   games_per_set: number
   tiebreak_at: number
   requires_dob: boolean
-  min_age: number | null
-  max_age: number | null
   registration_deadline_override: string | null
 }
 
@@ -126,28 +124,6 @@ export function TournamentRulesFields({ mode, initial }: Props) {
           />
           Require a date of birth on the participant
         </label>
-        <div className="grid grid-cols-2 gap-3 mt-3">
-          <label className="block">
-            <span className="text-sm">Min age</span>
-            <input
-              type="number"
-              name="min_age"
-              min={0}
-              defaultValue={i?.min_age ?? ''}
-              className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm">Max age</span>
-            <input
-              type="number"
-              name="max_age"
-              min={0}
-              defaultValue={i?.max_age ?? ''}
-              className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-            />
-          </label>
-        </div>
         <label className="block mt-3">
           <span className="text-sm">Registration deadline override (optional)</span>
           <input

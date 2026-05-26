@@ -111,7 +111,7 @@ export default async function HomePage() {
 
   const { data: tournaments } = await supabase
     .from('tournaments')
-    .select('id, name, location, start_date, end_date, status')
+    .select('id, name, start_date, end_date, status')
     .order('start_date', { ascending: false })
 
   return (
@@ -296,7 +296,7 @@ export default async function HomePage() {
                       <div>
                         <h2 className="text-lg font-medium">{t.name}</h2>
                         <p className="text-sm text-[var(--color-muted)]">
-                          {t.location ?? 'Location TBD'} · {t.start_date} – {t.end_date}
+                          {t.start_date} – {t.end_date}
                         </p>
                       </div>
                       <span className="text-xs uppercase tracking-wide text-[var(--color-muted)]">

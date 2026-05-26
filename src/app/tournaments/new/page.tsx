@@ -38,13 +38,6 @@ export default async function NewTournamentPage({ searchParams }: Props) {
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>
-        <label className="block">
-          <span className="text-sm">Location</span>
-          <input
-            name="location"
-            className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-          />
-        </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="text-sm">Start date</span>

@@ -33,7 +33,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   const { data: tournament } = await supabase
     .from('tournaments')
     .select(
-      'id, name, location, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, draw_status, requires_dob, min_age, max_age',
+      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, draw_status, requires_dob',
     )
     .eq('id', id)
     .maybeSingle()
@@ -90,13 +90,11 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         <div>
           <h1 className="text-3xl font-semibold">{tournament.name}</h1>
           <p className="text-[var(--color-muted)] mt-1">
-            {tournament.location ?? 'Location TBD'} · {tournament.start_date} – {tournament.end_date}
+            {tournament.start_date} – {tournament.end_date}
           </p>
           <p className="text-sm text-[var(--color-muted)] mt-1">
             {tournament.kind} · {tournament.bracket_format} · {tournament.match_kind}
             {tournament.requires_dob && ' · DOB required'}
-            {tournament.min_age != null && ` · min ${tournament.min_age}`}
-            {tournament.max_age != null && ` · max ${tournament.max_age}`}
           </p>
           <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mt-1">
             Status: {tournament.status} · Draw: {tournament.draw_status}
