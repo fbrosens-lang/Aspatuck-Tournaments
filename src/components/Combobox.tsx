@@ -40,10 +40,10 @@ type Props = {
    *  to show an entire club directory without scrolling past invisible
    *  entries, low enough that the DOM stays cheap. */
   maxResults?: number
-  /** If true, picking an option with Enter also submits the closest form.
-   *  Useful for single-Combobox forms where pressing Enter twice (once to
-   *  pick, once to submit) is the most common mistake. Click-to-pick still
-   *  requires the user to hit the submit button separately. */
+  /** If true, picking an option (by keyboard Enter or by mouse click)
+   *  immediately submits the closest form. Useful for single-Combobox forms
+   *  where pressing Enter twice — or hunting for the Submit button after a
+   *  click — is the most common mistake. */
   submitOnPick?: boolean
 }
 
@@ -109,7 +109,10 @@ export function Combobox({
       .slice(0, maxResults)
   }, [items, query, maxResults])
 
-  function pick(item: ComboboxItem) {
+  function pick(item: ComboboxItem, form?: HTMLFormElement | null) {
+    if (submitOnPick && form) {
+      pendingSubmitFormRef.current = form
+    }
     setPicked(item)
     setQuery(item.label)
     setOpen(false)
@@ -127,10 +130,7 @@ export function Combobox({
     } else if (e.key === 'Enter') {
       if (open && filtered[activeIndex]) {
         e.preventDefault()
-        if (submitOnPick) {
-          pendingSubmitFormRef.current = e.currentTarget.form
-        }
-        pick(filtered[activeIndex])
+        pick(filtered[activeIndex], e.currentTarget.form)
       }
     } else if (e.key === 'Escape') {
       setOpen(false)
@@ -214,7 +214,7 @@ export function Combobox({
                   role="option"
                   aria-selected={isActive}
                   onMouseEnter={() => setActiveIndex(idx)}
-                  onClick={() => pick(i)}
+                  onClick={(e) => pick(i, e.currentTarget.form)}
                   className={`w-full text-left px-3 py-1.5 ${
                     isActive ? 'bg-zinc-100' : 'hover:bg-zinc-50'
                   }`}
