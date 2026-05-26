@@ -9,6 +9,7 @@ import {
   tdEnterTeamFromClubMembers,
   tdWithdrawEntry,
   tdRegenerateDraw,
+  tdClearDraw,
   tdGenerateDraw,
 } from './actions'
 import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
@@ -104,7 +105,12 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         <p className="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
           {ok === 'generated' && 'Draw generated with the current roster.'}
           {ok === 'regenerated' && 'Draw regenerated with the current roster.'}
-          {ok !== 'generated' && ok !== 'regenerated' && 'Saved.'}
+          {ok === 'cleared' &&
+            'Draw cleared. Sign-ups are open again — players can register and you can regenerate when you’re ready.'}
+          {ok !== 'generated' &&
+            ok !== 'regenerated' &&
+            ok !== 'cleared' &&
+            'Saved.'}
         </p>
       )}
 
@@ -137,20 +143,32 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             </p>
             <p className="text-xs text-red-700 mt-2">
               {drawExists &&
-                'Regenerating destroys the current bracket and any reported scores. Result history is preserved in the audit log but the bracket is rebuilt from scratch.'}
+                'Regenerating or undoing the draw destroys the current bracket and any reported scores. Result history is preserved in the audit log. Undo also reopens sign-ups so players can register again.'}
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap justify-end">
             {drawExists ? (
-              <form action={tdRegenerateDraw}>
-                <input type="hidden" name="tournament_id" value={id} />
-                <button
-                  type="submit"
-                  className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-100"
-                >
-                  Regenerate draw
-                </button>
-              </form>
+              <>
+                <form action={tdClearDraw}>
+                  <input type="hidden" name="tournament_id" value={id} />
+                  <button
+                    type="submit"
+                    className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50"
+                    title="Delete the bracket and reopen sign-ups. Players can register again."
+                  >
+                    Undo draw
+                  </button>
+                </form>
+                <form action={tdRegenerateDraw}>
+                  <input type="hidden" name="tournament_id" value={id} />
+                  <button
+                    type="submit"
+                    className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-100"
+                  >
+                    Regenerate draw
+                  </button>
+                </form>
+              </>
             ) : (
               <form action={tdGenerateDraw}>
                 <input type="hidden" name="tournament_id" value={id} />

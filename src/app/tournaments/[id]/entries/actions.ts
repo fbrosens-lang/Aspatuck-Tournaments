@@ -109,6 +109,16 @@ export async function tdRegenerateDraw(formData: FormData) {
   redirect(backUrl(tid, undefined, 'regenerated'))
 }
 
+export async function tdClearDraw(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_clear_draw', { p_tournament_id: tid })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/draw`)
+  redirect(backUrl(tid, undefined, 'cleared'))
+}
+
 export async function tdGenerateDraw(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const supabase = await createClient()
