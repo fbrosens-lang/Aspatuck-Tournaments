@@ -58,6 +58,34 @@ export default async function HomePage() {
   const supabase = await createClient()
   const { userId, role } = await getSession()
 
+  if (!userId) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold">Aspatuck Tournaments</h1>
+          <p className="text-[var(--color-muted)]">
+            Sign in or create an account to view tournaments, sign up to play,
+            and report match results.
+          </p>
+        </div>
+        <div className="flex justify-center gap-3">
+          <Link
+            href="/auth/login"
+            className="rounded border border-[var(--color-border)] px-5 py-2 hover:bg-zinc-50"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/auth/signup"
+            className="rounded bg-[var(--color-accent)] text-white px-5 py-2 hover:opacity-90"
+          >
+            Sign up
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   let myMatches: PlayerMatch[] | null = null
   let tdMatches: TdMatch[] | null = null
   let pendingInvites: PendingInvite[] = []

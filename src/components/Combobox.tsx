@@ -2,6 +2,17 @@
 
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
+// True if every character of needle appears in haystack in order (not
+// necessarily contiguously). Lets "gabi" match "gabriel" so nicknames and
+// near-misses still surface the right person.
+function isSubsequence(needle: string, haystack: string): boolean {
+  let i = 0
+  for (let j = 0; j < haystack.length && i < needle.length; j++) {
+    if (haystack[j] === needle[i]) i++
+  }
+  return i === needle.length
+}
+
 export type ComboboxItem = {
   /** What gets submitted in the hidden form field when this item is picked. */
   value: string
@@ -52,14 +63,30 @@ export function Combobox({
   const listId = `${reactId}-list`
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return items.slice(0, maxResults)
+    const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    if (tokens.length === 0) return items.slice(0, maxResults)
+
+    // Primary rule: match by last name. Nicknames (Bob ↔ Robert, Peggy ↔
+    // Margaret) make first-name search unreliable, so we use the user's last
+    // query token (typically "the last name they wrote") and compare against
+    // the candidate's last name. If two people share a last name, both show
+    // up and the user disambiguates.
+    const lastToken = tokens[tokens.length - 1]
+    const byLastName = items.filter((i) => {
+      const labelTokens = i.label.toLowerCase().split(/\s+/).filter(Boolean)
+      const lastName = labelTokens[labelTokens.length - 1] ?? ''
+      return isSubsequence(lastToken, lastName)
+    })
+    if (byLastName.length > 0) return byLastName.slice(0, maxResults)
+
+    // Fallback when nothing matched as a last name (e.g. user typed only a
+    // first name or a partial). Subsequence-match against label or sublabel
+    // so we at least surface near-misses instead of an empty list.
     return items
-      .filter(
-        (i) =>
-          i.label.toLowerCase().includes(q) ||
-          (i.sublabel?.toLowerCase().includes(q) ?? false),
-      )
+      .filter((i) => {
+        const hay = `${i.label} ${i.sublabel ?? ''}`.toLowerCase()
+        return tokens.every((t) => isSubsequence(t, hay))
+      })
       .slice(0, maxResults)
   }, [items, query, maxResults])
 

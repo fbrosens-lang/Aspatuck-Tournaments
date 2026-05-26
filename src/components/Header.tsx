@@ -25,10 +25,10 @@ export async function Header() {
           Aspatuck Tournaments
         </Link>
         <nav className="flex items-center gap-4 text-sm">
-          <Link href="/" className="hover:underline">Tournaments</Link>
-          <Link href="/members" className="hover:underline">Members</Link>
           {user ? (
             <>
+              <Link href="/" className="hover:underline">Tournaments</Link>
+              <Link href="/members" className="hover:underline">Members</Link>
               {(role === 'site_admin' || role === 'tournament_director') && (
                 <Link href="/director" className="hover:underline font-medium">Director</Link>
               )}

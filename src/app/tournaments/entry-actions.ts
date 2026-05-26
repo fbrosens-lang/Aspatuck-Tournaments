@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
 function backUrl(tid: string, error?: string, ok?: string) {
@@ -12,8 +13,16 @@ function backUrl(tid: string, error?: string, ok?: string) {
   return `/tournaments/${tid}${s ? `?${s}` : ''}`
 }
 
+async function requireSignedIn() {
+  const { userId } = await getSession()
+  if (!userId) {
+    redirect('/auth/login?error=Please+sign+in+first+to+sign+up+for+a+tournament.')
+  }
+}
+
 export async function register(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
+  await requireSignedIn()
   const supabase = await createClient()
   const { error } = await supabase.rpc('register_for_tournament', {
     p_tournament_id: tid,
@@ -26,14 +35,15 @@ export async function register(formData: FormData) {
 
 export async function registerTeam(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
-  const partnerEmail = String(formData.get('partner_email') ?? '').trim()
-  if (!partnerEmail) {
-    redirect(backUrl(tid, 'Pick your partner from the suggestions.'))
+  const partnerClubMemberId = String(formData.get('partner_club_member_id') ?? '').trim()
+  if (!partnerClubMemberId) {
+    redirect(backUrl(tid, 'Pick your partner from the directory.'))
   }
+  await requireSignedIn()
   const supabase = await createClient()
-  const { error } = await supabase.rpc('register_team_for_tournament', {
+  const { error } = await supabase.rpc('register_team_from_directory', {
     p_tournament_id: tid,
-    p_partner_email: partnerEmail,
+    p_partner_club_member_id: partnerClubMemberId,
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
@@ -44,6 +54,7 @@ export async function registerTeam(formData: FormData) {
 export async function withdrawSelf(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const entryId = String(formData.get('entry_id') ?? '')
+  await requireSignedIn()
   const supabase = await createClient()
   const { error } = await supabase.rpc('withdraw_self', { p_entry_id: entryId })
   if (error) redirect(backUrl(tid, error.message))
@@ -55,6 +66,7 @@ export async function withdrawSelf(formData: FormData) {
 export async function acceptInvite(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const teamId = String(formData.get('team_id') ?? '')
+  await requireSignedIn()
   const supabase = await createClient()
   const { error } = await supabase.rpc('accept_partner_invite', { p_team_id: teamId })
   if (error) redirect(backUrl(tid, error.message))
@@ -66,6 +78,7 @@ export async function acceptInvite(formData: FormData) {
 export async function declineInvite(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const teamId = String(formData.get('team_id') ?? '')
+  await requireSignedIn()
   const supabase = await createClient()
   const { error } = await supabase.rpc('decline_partner_invite', { p_team_id: teamId })
   if (error) redirect(backUrl(tid, error.message))

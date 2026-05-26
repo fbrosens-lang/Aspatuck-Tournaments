@@ -31,8 +31,8 @@ type Props = {
   canRegister: boolean
   drawIsSet: boolean
   me: MyEntryState
-  /** Suggestions for the doubles partner picker. Each value should be the
-   *  candidate's email (what register_team_for_tournament looks up). */
+  /** Suggestions for the doubles partner picker. Each value is a
+   *  club_members.id (what register_team_from_directory looks up). */
   partnerCandidates?: ComboboxItem[]
 }
 
@@ -189,7 +189,7 @@ export function RegisterPanel({
         <label className="block text-sm">
           <span>Doubles partner</span>
           <Combobox
-            name="partner_email"
+            name="partner_club_member_id"
             items={partnerCandidates}
             required
             placeholder="Type your partner's name…"
@@ -197,8 +197,9 @@ export function RegisterPanel({
           />
         </label>
         <p className="text-xs text-[var(--color-muted)]">
-          Pick from members who already have an account. They&apos;ll see the
-          invite on the tournament page and on their home page.
+          Pick anyone from the club directory. If your partner already has an
+          account, they&apos;ll see the invite on their home page. If not,
+          their team entry will be waiting for them when they sign up.
         </p>
         <button
           type="submit"

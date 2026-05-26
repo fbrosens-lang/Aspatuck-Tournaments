@@ -69,9 +69,10 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     ? entries
     : entries.map((e) => ({ ...e, seed: null }))
 
-  // Doubles partner picker: load registered users so the player can pick by
-  // name instead of having to type the partner's exact email. Skip the load
-  // for singles tournaments or users who can't currently register.
+  // Doubles partner picker: load club directory entries (NOT signed-up
+  // profiles), so a captain can pick a partner who hasn't created an account
+  // yet. If the partner has a linked account they'll see the invite on their
+  // home page; if they don't, signing up later auto-links them to the team.
   let partnerCandidates: ComboboxItem[] = []
   if (
     userId &&
@@ -79,15 +80,18 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     canRegister &&
     myState.kind === 'none'
   ) {
-    const { data: rawProfiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, contact_email')
-      .neq('id', userId) // can't be your own partner
-    const sorted = rawProfiles ? [...rawProfiles].sort(byLastName) : []
-    partnerCandidates = sorted.map((p) => ({
-      value: p.contact_email,
-      label: p.full_name,
-      sublabel: p.contact_email,
+    const { data: rawMembers } = await supabase
+      .from('club_members')
+      .select('id, full_name, email, user_id')
+    const sorted = rawMembers
+      ? [...rawMembers]
+          .filter((m) => m.user_id !== userId) // can't be your own partner
+          .sort(byLastName)
+      : []
+    partnerCandidates = sorted.map((m) => ({
+      value: m.id,
+      label: m.full_name,
+      sublabel: m.email,
     }))
   }
 
