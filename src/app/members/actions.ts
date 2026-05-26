@@ -62,3 +62,36 @@ export async function deleteMember(formData: FormData) {
   revalidatePath('/members')
   redirect('/members?ok=deleted')
 }
+
+export async function linkMemberToAccount(formData: FormData) {
+  const clubMemberId = s(formData.get('club_member_id'))
+  const userId = s(formData.get('user_id'))
+  if (!clubMemberId) {
+    redirect('/members?error=Missing+directory+entry')
+  }
+  if (!userId) {
+    redirect('/members?error=Pick+an+account+from+the+list')
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_link_club_member_to_profile', {
+    p_club_member_id: clubMemberId,
+    p_user_id: userId,
+  })
+  if (error) redirect(`/members?error=${encodeURIComponent(error.message)}`)
+  revalidatePath('/members')
+  redirect('/members?ok=linked')
+}
+
+export async function unlinkMember(formData: FormData) {
+  const clubMemberId = s(formData.get('club_member_id'))
+  if (!clubMemberId) {
+    redirect('/members?error=Missing+directory+entry')
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_unlink_club_member', {
+    p_club_member_id: clubMemberId,
+  })
+  if (error) redirect(`/members?error=${encodeURIComponent(error.message)}`)
+  revalidatePath('/members')
+  redirect('/members?ok=unlinked')
+}

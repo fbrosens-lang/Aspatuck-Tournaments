@@ -2,7 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
 import { byLastName } from '@/lib/names'
 import { formatDateUS } from '@/lib/dates'
-import { createMember, deleteMember } from './actions'
+import { Combobox, type ComboboxItem } from '@/components/Combobox'
+import {
+  createMember,
+  deleteMember,
+  linkMemberToAccount,
+  unlinkMember,
+} from './actions'
 import Link from 'next/link'
 
 type Props = {
@@ -26,6 +32,33 @@ export default async function MembersPage({ searchParams }: Props) {
   const { role } = await getSession()
   const canEdit = role === 'tournament_director' || role === 'site_admin'
 
+  // Orphan accounts: profiles that aren't yet linked to any directory entry.
+  // These are the only valid targets for "Link to account…" pickers below.
+  // Only loaded for TDs/admins since regular members can't link.
+  let orphanItems: ComboboxItem[] = []
+  let unlinkedCount = 0
+  if (canEdit) {
+    const { data: linkedRows } = await supabase
+      .from('club_members')
+      .select('user_id')
+      .not('user_id', 'is', null)
+    const linkedIds = new Set((linkedRows ?? []).map((r) => r.user_id as string))
+
+    const { data: allProfiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, contact_email')
+    const orphans = (allProfiles ?? [])
+      .filter((p) => !linkedIds.has(p.id))
+      .sort(byLastName)
+    orphanItems = orphans.map((p) => ({
+      value: p.id,
+      label: p.full_name,
+      sublabel: p.contact_email,
+    }))
+
+    unlinkedCount = (members ?? []).filter((m) => !m.user_id).length
+  }
+
   return (
     <div className="space-y-6">
       <header>
@@ -45,6 +78,21 @@ export default async function MembersPage({ searchParams }: Props) {
           {ok === 'created' && 'Member added.'}
           {ok === 'updated' && 'Member updated.'}
           {ok === 'deleted' && 'Member removed.'}
+          {ok === 'linked' && 'Directory entry linked to account.'}
+          {ok === 'unlinked' && 'Directory entry unlinked.'}
+        </p>
+      )}
+
+      {canEdit && unlinkedCount > 0 && orphanItems.length > 0 && (
+        <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {unlinkedCount} directory{' '}
+          {unlinkedCount === 1 ? 'entry has' : 'entries have'} no linked
+          account, and there{' '}
+          {orphanItems.length === 1 ? 'is' : 'are'} {orphanItems.length}{' '}
+          signed-up{' '}
+          {orphanItems.length === 1 ? 'account' : 'accounts'} not yet tied to
+          a directory entry. Use the &quot;Link to account…&quot; picker on
+          each unlinked row to pair them up.
         </p>
       )}
 
@@ -161,10 +209,54 @@ export default async function MembersPage({ searchParams }: Props) {
                   </td>
                   <td className="px-4 py-2">
                     {m.user_id ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-green-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        account
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 text-xs text-green-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          account
+                        </span>
+                        {canEdit && (
+                          <form action={unlinkMember} className="inline">
+                            <input
+                              type="hidden"
+                              name="club_member_id"
+                              value={m.id}
+                            />
+                            <button
+                              type="submit"
+                              className="text-xs text-[var(--color-muted)] hover:underline"
+                              title="Disconnect this directory entry from the account it was linked to"
+                            >
+                              unlink
+                            </button>
+                          </form>
+                        )}
                       </span>
+                    ) : canEdit && orphanItems.length > 0 ? (
+                      <form
+                        action={linkMemberToAccount}
+                        className="flex items-end gap-2 min-w-[260px]"
+                      >
+                        <input
+                          type="hidden"
+                          name="club_member_id"
+                          value={m.id}
+                        />
+                        <div className="flex-1">
+                          <Combobox
+                            name="user_id"
+                            items={orphanItems}
+                            required
+                            placeholder="Link to account…"
+                            ariaLabel="Account to link"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50"
+                        >
+                          Link
+                        </button>
+                      </form>
                     ) : (
                       <span className="text-xs text-[var(--color-muted)]">—</span>
                     )}
