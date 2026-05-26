@@ -89,6 +89,28 @@ export async function tdEnterGuest(formData: FormData) {
   redirect(backUrl(tid, undefined, '1'))
 }
 
+export async function tdAcceptTeamInvite(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const teamId = String(formData.get('team_id') ?? '')
+  if (!teamId) redirect(backUrl(tid, 'Missing team id.'))
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_accept_team_invite', { p_team_id: teamId })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  redirect(backUrl(tid, undefined, 'team_accepted'))
+}
+
+export async function tdDeclineTeamInvite(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const teamId = String(formData.get('team_id') ?? '')
+  if (!teamId) redirect(backUrl(tid, 'Missing team id.'))
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_decline_team_invite', { p_team_id: teamId })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  redirect(backUrl(tid, undefined, 'team_declined'))
+}
+
 export async function tdWithdrawEntry(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const entryId = String(formData.get('entry_id') ?? '')

@@ -3,6 +3,8 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
 import {
+  tdAcceptTeamInvite,
+  tdDeclineTeamInvite,
   tdEnterMember,
   tdEnterGuest,
   tdEnterClubMember,
@@ -107,9 +109,15 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           {ok === 'regenerated' && 'Draw regenerated with the current roster.'}
           {ok === 'cleared' &&
             'Draw cleared. Sign-ups are open again — players can register and you can regenerate when you’re ready.'}
+          {ok === 'team_accepted' &&
+            'Team invite accepted on behalf of the partner. The entry is now confirmed.'}
+          {ok === 'team_declined' &&
+            'Team invite declined on behalf of the partner. The entry has been withdrawn.'}
           {ok !== 'generated' &&
             ok !== 'regenerated' &&
             ok !== 'cleared' &&
+            ok !== 'team_accepted' &&
+            ok !== 'team_declined' &&
             'Saved.'}
         </p>
       )}
@@ -364,34 +372,69 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           </div>
         ) : (
           <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
-            {entries.map((e) => (
-              <li key={e.id} className="px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--color-muted)] w-6">{e.seed ?? ''}</span>
-                  <span>{e.display}</span>
-                  {e.added_by_td_id && (
-                    <span className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)]">
-                      added by TD
-                    </span>
-                  )}
-                  {e.status !== 'confirmed' && (
-                    <span className="text-xs rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
-                      {e.status}
-                    </span>
-                  )}
-                </div>
-                <form action={tdWithdrawEntry}>
-                  <input type="hidden" name="tournament_id" value={id} />
-                  <input type="hidden" name="entry_id" value={e.id} />
-                  <button
-                    type="submit"
-                    className="text-xs text-red-700 hover:underline"
-                  >
-                    Withdraw
-                  </button>
-                </form>
-              </li>
-            ))}
+            {entries.map((e) => {
+              // A pending team invite: the captain signed up with a partner,
+              // partner hasn't accepted yet. TD can confirm on behalf of the
+              // partner (e.g., captain told the TD their partner agreed).
+              const pendingTeamInvite =
+                e.status === 'pending' && e.team_id !== null
+              return (
+                <li key={e.id} className="px-4 py-2 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs text-[var(--color-muted)] w-6">{e.seed ?? ''}</span>
+                    <span className="truncate">{e.display}</span>
+                    {e.added_by_td_id && (
+                      <span className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)]">
+                        added by TD
+                      </span>
+                    )}
+                    {e.status !== 'confirmed' && (
+                      <span className="text-xs rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
+                        {e.status}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {pendingTeamInvite && (
+                      <>
+                        <form action={tdAcceptTeamInvite}>
+                          <input type="hidden" name="tournament_id" value={id} />
+                          <input type="hidden" name="team_id" value={e.team_id!} />
+                          <button
+                            type="submit"
+                            className="text-xs text-emerald-700 hover:underline"
+                            title="Confirm this team on behalf of the partner"
+                          >
+                            Accept for partner
+                          </button>
+                        </form>
+                        <form action={tdDeclineTeamInvite}>
+                          <input type="hidden" name="tournament_id" value={id} />
+                          <input type="hidden" name="team_id" value={e.team_id!} />
+                          <button
+                            type="submit"
+                            className="text-xs text-red-700 hover:underline"
+                            title="Decline this team on behalf of the partner"
+                          >
+                            Decline for partner
+                          </button>
+                        </form>
+                      </>
+                    )}
+                    <form action={tdWithdrawEntry}>
+                      <input type="hidden" name="tournament_id" value={id} />
+                      <input type="hidden" name="entry_id" value={e.id} />
+                      <button
+                        type="submit"
+                        className="text-xs text-red-700 hover:underline"
+                      >
+                        Withdraw
+                      </button>
+                    </form>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>
