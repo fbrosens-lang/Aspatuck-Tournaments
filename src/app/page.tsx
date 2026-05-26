@@ -115,6 +115,51 @@ export default async function HomePage() {
     .select('id, name, start_date, end_date, status')
     .order('start_date', { ascending: false })
 
+  // Which tournaments is the current user actually registered in? We use this
+  // to show a "Registered" badge on the tournament cards below. A user is
+  // registered if they're either the participant on a singles entry, or the
+  // captain or partner on a team that has a non-withdrawn entry.
+  const registeredTournamentIds = new Set<string>()
+  if (userId) {
+    const { data: myParts } = await supabase
+      .from('participants')
+      .select('id, tournament_id')
+      .eq('user_id', userId)
+    const partIds = (myParts ?? []).map((p) => p.id)
+    if (partIds.length > 0) {
+      const [{ data: singlesEntries }, { data: capTeams }, { data: parTeams }] =
+        await Promise.all([
+          supabase
+            .from('entries')
+            .select('tournament_id')
+            .in('participant_id', partIds)
+            .neq('status', 'withdrawn'),
+          supabase
+            .from('teams')
+            .select('id, tournament_id')
+            .in('captain_participant_id', partIds),
+          supabase
+            .from('teams')
+            .select('id, tournament_id')
+            .in('partner_participant_id', partIds),
+        ])
+      for (const e of singlesEntries ?? []) {
+        registeredTournamentIds.add(e.tournament_id)
+      }
+      const teamIds = [...(capTeams ?? []), ...(parTeams ?? [])].map((t) => t.id)
+      if (teamIds.length > 0) {
+        const { data: teamEntries } = await supabase
+          .from('entries')
+          .select('tournament_id')
+          .in('team_id', teamIds)
+          .neq('status', 'withdrawn')
+        for (const e of teamEntries ?? []) {
+          registeredTournamentIds.add(e.tournament_id)
+        }
+      }
+    }
+  }
+
   return (
     <div className="space-y-8">
       {pendingInvites.length > 0 && (
@@ -284,30 +329,40 @@ export default async function HomePage() {
             </div>
           ) : (
             <ul className="space-y-3">
-              {tournaments.map((t) => (
-                <li
-                  key={t.id}
-                  className="rounded border border-[var(--color-border)] bg-white"
-                >
-                  <Link
-                    href={`/tournaments/${t.id}`}
-                    className="block p-4 hover:bg-zinc-50"
+              {tournaments.map((t) => {
+                const isRegistered = registeredTournamentIds.has(t.id)
+                return (
+                  <li
+                    key={t.id}
+                    className="rounded border border-[var(--color-border)] bg-white"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-lg font-medium">{t.name}</h2>
-                        <p className="text-sm text-[var(--color-muted)]">
-                          Runs from {formatDateLong(t.start_date)} to{' '}
-                          {formatDateLong(t.end_date)}
-                        </p>
+                    <Link
+                      href={`/tournaments/${t.id}`}
+                      className="block p-4 hover:bg-zinc-50"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <h2 className="text-lg font-medium flex items-center gap-2 flex-wrap">
+                            <span>{t.name}</span>
+                            {isRegistered && (
+                              <span className="text-xs rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800 font-normal">
+                                Registered
+                              </span>
+                            )}
+                          </h2>
+                          <p className="text-sm text-[var(--color-muted)]">
+                            Runs from {formatDateLong(t.start_date)} to{' '}
+                            {formatDateLong(t.end_date)}
+                          </p>
+                        </div>
+                        <span className="text-xs uppercase tracking-wide text-[var(--color-muted)] shrink-0">
+                          {t.status}
+                        </span>
                       </div>
-                      <span className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                        {t.status}
-                      </span>
-                    </div>
-                  </Link>
-                </li>
-              ))}
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </div>
