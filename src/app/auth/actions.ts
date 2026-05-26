@@ -30,6 +30,23 @@ export async function signup(formData: FormData) {
     redirect('/auth/signup?error=Full+name+is+required')
   }
   const supabase = await createClient()
+
+  // Block accidental duplicate sign-ups: someone using a new email but the
+  // same name as an existing account would otherwise quietly create a second
+  // user. The RPC allows the signup when the email is already in the club
+  // directory (the TD has explicitly added that person under that email).
+  const { data: collides } = await supabase.rpc('signup_name_collides', {
+    p_full_name: fullName,
+    p_email: email,
+  })
+  if (collides) {
+    redirect(
+      `/auth/signup?error=${encodeURIComponent(
+        "A user with this name already exists. Please log in with the email it was created under (use 'Forgot password?' if you don't remember), or contact the tournament director if you need help.",
+      )}`,
+    )
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

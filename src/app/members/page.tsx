@@ -7,6 +7,7 @@ import { Combobox, type ComboboxItem } from '@/components/Combobox'
 import {
   createMember,
   deleteMember,
+  deleteOrphanProfile,
   linkMemberToAccount,
   unlinkMember,
 } from './actions'
@@ -41,8 +42,12 @@ export default async function MembersPage({ searchParams }: Props) {
   const canEdit = role === 'tournament_director' || role === 'site_admin'
 
   // Orphan accounts: profiles that aren't yet linked to any directory entry.
-  // These are the only valid targets for "Link to account…" pickers below.
-  // Only loaded for TDs/admins since regular members can't link.
+  // These are the only valid targets for "Link to account…" pickers below,
+  // and they're also the rows a TD can outright delete (e.g. an accidental
+  // duplicate signup made before the name-collision check landed).
+  // Only loaded for TDs/admins since regular members can't link or delete.
+  type Orphan = { id: string; full_name: string; contact_email: string }
+  let orphans: Orphan[] = []
   let orphanItems: ComboboxItem[] = []
   let unlinkedCount = 0
   if (canEdit) {
@@ -55,7 +60,7 @@ export default async function MembersPage({ searchParams }: Props) {
     const { data: allProfiles } = await supabase
       .from('profiles')
       .select('id, full_name, contact_email')
-    const orphans = (allProfiles ?? [])
+    orphans = (allProfiles ?? [])
       .filter((p) => !linkedIds.has(p.id))
       .sort(byLastName)
     orphanItems = orphans.map((p) => ({
@@ -88,6 +93,7 @@ export default async function MembersPage({ searchParams }: Props) {
           {ok === 'deleted' && 'Member removed.'}
           {ok === 'linked' && 'Directory entry linked to account.'}
           {ok === 'unlinked' && 'Directory entry unlinked.'}
+          {ok === 'account_deleted' && 'Account deleted.'}
         </p>
       )}
 
@@ -129,6 +135,44 @@ export default async function MembersPage({ searchParams }: Props) {
           </Link>
         )}
       </form>
+
+      {canEdit && orphans.length > 0 && (
+        <details className="rounded border border-amber-300 bg-amber-50 p-4">
+          <summary className="cursor-pointer font-medium">
+            Accounts without a directory entry ({orphans.length})
+          </summary>
+          <p className="text-sm text-[var(--color-muted)] mt-2">
+            These accounts signed up but aren&apos;t tied to any directory
+            entry. Link them above on a matching row, or delete the account if
+            it&apos;s an accidental duplicate.
+          </p>
+          <ul className="mt-3 divide-y divide-amber-200 bg-white rounded border border-amber-200">
+            {orphans.map((p) => (
+              <li
+                key={p.id}
+                className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+              >
+                <div className="min-w-0">
+                  <div className="truncate">{p.full_name}</div>
+                  <div className="text-xs text-[var(--color-muted)] truncate">
+                    {p.contact_email}
+                  </div>
+                </div>
+                <form action={deleteOrphanProfile} className="shrink-0">
+                  <input type="hidden" name="user_id" value={p.id} />
+                  <button
+                    type="submit"
+                    className="text-xs text-red-700 hover:underline"
+                    title="Delete this account permanently"
+                  >
+                    Delete account
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {canEdit && (
         <details className="rounded border border-[var(--color-border)] bg-white p-4">

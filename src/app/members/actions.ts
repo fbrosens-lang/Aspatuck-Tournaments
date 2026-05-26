@@ -95,3 +95,17 @@ export async function unlinkMember(formData: FormData) {
   revalidatePath('/members')
   redirect('/members?ok=unlinked')
 }
+
+export async function deleteOrphanProfile(formData: FormData) {
+  const userId = s(formData.get('user_id'))
+  if (!userId) {
+    redirect('/members?error=Missing+account')
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_delete_orphan_profile', {
+    p_user_id: userId,
+  })
+  if (error) redirect(`/members?error=${encodeURIComponent(error.message)}`)
+  revalidatePath('/members')
+  redirect('/members?ok=account_deleted')
+}
