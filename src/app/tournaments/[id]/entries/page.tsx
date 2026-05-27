@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
@@ -44,11 +45,16 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
 
   const entries = await loadEntriesForTournament(id)
 
-  const { count: matchCount } = await supabase
+  const { data: matchRows } = await supabase
     .from('matches')
-    .select('id', { count: 'exact', head: true })
+    .select('id, entry_a_id, entry_b_id')
     .eq('tournament_id', id)
-  const drawExists = (matchCount ?? 0) > 0
+  const drawExists = (matchRows?.length ?? 0) > 0
+  const entryIdsInDraw = new Set<string>()
+  for (const m of matchRows ?? []) {
+    if (m.entry_a_id) entryIdsInDraw.add(m.entry_a_id)
+    if (m.entry_b_id) entryIdsInDraw.add(m.entry_b_id)
+  }
   const confirmedCount = entries.filter((e) => e.status === 'confirmed').length
   // Unpaired entries can't be drawn into the bracket — they need a
   // partner first. We surface them in the "no draw yet" copy below so
@@ -103,7 +109,29 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           {error}
         </p>
       )}
-      {ok && (
+      {ok && ok.startsWith('added_post_draw:') && (
+        <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          {(() => {
+            const name = decodeURIComponent(ok.slice('added_post_draw:'.length))
+            return (
+              <>
+                Added <strong>{name}</strong> to the roster. The draw is
+                already set, so <strong>{name}</strong> isn’t in the bracket
+                yet — drop them into a bye slot on the{' '}
+                <Link
+                  href={`/tournaments/${id}/draw`}
+                  className="underline font-medium"
+                >
+                  Draw page
+                </Link>
+                , or regenerate the draw to rebuild the bracket with the
+                current roster.
+              </>
+            )
+          })()}
+        </p>
+      )}
+      {ok && !ok.startsWith('added_post_draw:') && (
         <p className="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
           {(() => {
             if (ok === 'generated') return 'Draw generated with the current roster.'
@@ -598,6 +626,14 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                     {e.status !== 'confirmed' && (
                       <span className="text-xs rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
                         {e.status}
+                      </span>
+                    )}
+                    {drawExists && !entryIdsInDraw.has(e.id) && (
+                      <span
+                        className="text-xs rounded bg-amber-100 px-1.5 py-0.5 text-amber-800"
+                        title="Player isn’t placed in the bracket. Add them to a bye slot on the Draw page, or regenerate the draw."
+                      >
+                        not in draw
                       </span>
                     )}
                   </div>

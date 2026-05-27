@@ -19,6 +19,34 @@ function addedOk(name: string) {
   return `added:${encodeURIComponent(name)}`
 }
 
+function addedPostDrawOk(name: string) {
+  // Signal that the entry landed in a tournament whose bracket is already
+  // built — the page renders an amber banner with a link to the Draw
+  // page so the TD knows the player still needs a bracket position.
+  return `added_post_draw:${encodeURIComponent(name)}`
+}
+
+async function tournamentHasDraw(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tid: string,
+): Promise<boolean> {
+  const { count } = await supabase
+    .from('matches')
+    .select('id', { count: 'exact', head: true })
+    .eq('tournament_id', tid)
+  return (count ?? 0) > 0
+}
+
+async function pickAddedOk(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tid: string,
+  name: string,
+): Promise<string> {
+  return (await tournamentHasDraw(supabase, tid))
+    ? addedPostDrawOk(name)
+    : addedOk(name)
+}
+
 export async function tdEnterMember(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const userId = String(formData.get('user_id') ?? '')
@@ -37,9 +65,10 @@ export async function tdEnterMember(formData: FormData) {
     p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
+  const ok = await pickAddedOk(supabase, tid, profile?.full_name ?? 'Entry')
   revalidatePath(`/tournaments/${tid}`)
   revalidatePath(`/tournaments/${tid}/entries`)
-  redirect(backUrl(tid, undefined, addedOk(profile?.full_name ?? 'Entry')))
+  redirect(backUrl(tid, undefined, ok))
 }
 
 /**
@@ -89,9 +118,10 @@ export async function tdEnterClubMember(formData: FormData) {
     p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
+  const ok = await pickAddedOk(supabase, tid, cm?.full_name ?? 'Entry')
   revalidatePath(`/tournaments/${tid}`)
   revalidatePath(`/tournaments/${tid}/entries`)
-  redirect(backUrl(tid, undefined, addedOk(cm?.full_name ?? 'Entry')))
+  redirect(backUrl(tid, undefined, ok))
 }
 
 export async function tdEnterTeamFromClubMembers(formData: FormData) {
@@ -118,9 +148,10 @@ export async function tdEnterTeamFromClubMembers(formData: FormData) {
     p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
+  const ok = await pickAddedOk(supabase, tid, `${captainName} & ${partnerName}`)
   revalidatePath(`/tournaments/${tid}`)
   revalidatePath(`/tournaments/${tid}/entries`)
-  redirect(backUrl(tid, undefined, addedOk(`${captainName} & ${partnerName}`)))
+  redirect(backUrl(tid, undefined, ok))
 }
 
 export async function tdEnterGuest(formData: FormData) {
@@ -141,9 +172,10 @@ export async function tdEnterGuest(formData: FormData) {
     p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
+  const ok = await pickAddedOk(supabase, tid, part?.display_name ?? 'Guest')
   revalidatePath(`/tournaments/${tid}`)
   revalidatePath(`/tournaments/${tid}/entries`)
-  redirect(backUrl(tid, undefined, addedOk(part?.display_name ?? 'Guest')))
+  redirect(backUrl(tid, undefined, ok))
 }
 
 export async function tdAddAndEnterGuest(formData: FormData) {
@@ -175,9 +207,10 @@ export async function tdAddAndEnterGuest(formData: FormData) {
     p_bypass_requirements: true,
   })
   if (enterErr) redirect(backUrl(tid, enterErr.message))
+  const ok = await pickAddedOk(supabase, tid, name)
   revalidatePath(`/tournaments/${tid}`)
   revalidatePath(`/tournaments/${tid}/entries`)
-  redirect(backUrl(tid, undefined, addedOk(name)))
+  redirect(backUrl(tid, undefined, ok))
 }
 
 export async function tdAcceptTeamInvite(formData: FormData) {
