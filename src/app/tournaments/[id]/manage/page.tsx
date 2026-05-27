@@ -8,6 +8,7 @@ import {
   updateTournament,
 } from '@/app/tournaments/actions'
 import { TournamentRulesFields } from '@/components/TournamentRulesFields'
+import { SeedVisibilityToggle } from '@/components/SeedVisibilityToggle'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -19,6 +20,8 @@ const OK_MESSAGES: Record<string, string> = {
   deadline: 'Deadline updated.',
   td_granted: 'Director added.',
   td_revoked: 'Director removed.',
+  seeds_shown: 'Seed numbers are now visible to players.',
+  seeds_hidden: 'Seed numbers are now hidden from players.',
 }
 
 function toLocalInput(ts: string | null): string {
@@ -88,6 +91,12 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
           {OK_MESSAGES[ok] ?? 'Saved.'}
         </p>
       )}
+
+      <SeedVisibilityToggle
+        tournamentId={t.id}
+        showSeedsPublicly={t.show_seeds_publicly}
+        returnTo="manage"
+      />
 
       <form action={updateTournament} className="space-y-4">
         <input type="hidden" name="id" value={t.id} />

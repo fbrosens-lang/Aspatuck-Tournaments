@@ -3,9 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
 import {
   saveSeeds,
-  setSeedsVisibility,
   tdAcceptTeamInvite,
   tdAddAndEnterGuest,
+  tdClearSeeds,
   tdDeclineTeamInvite,
   tdEnterMember,
   tdEnterGuest,
@@ -18,6 +18,7 @@ import {
 } from './actions'
 import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
 import { Combobox, type ComboboxItem } from '@/components/Combobox'
+import { SeedVisibilityToggle } from '@/components/SeedVisibilityToggle'
 import { byLastName, lastName } from '@/lib/names'
 
 type Props = {
@@ -109,6 +110,8 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             if (ok === 'team_declined')
               return 'Team invite declined on behalf of the partner. The entry has been withdrawn.'
             if (ok === 'seeded') return 'Seeds saved.'
+            if (ok === 'seeds_cleared')
+              return 'All seeds cleared. Add fresh seed numbers and regenerate the draw when ready.'
             if (ok === 'seeds_shown')
               return 'Seed numbers are now visible to players.'
             if (ok === 'seeds_hidden')
@@ -412,37 +415,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             {drawExists &&
               ' Regenerate the draw above to apply seed changes to bracket positions.'}
           </p>
-          {/* Same checkbox + description as Manage → Visibility. Both forms
-              write the same DB column, so toggling here is reflected in the
-              Manage checkbox the next time it loads, and vice versa. */}
-          <form
-            action={setSeedsVisibility}
-            className="mb-4 rounded border border-[var(--color-border)] p-3 flex items-start justify-between gap-3 flex-wrap"
-          >
-            <input type="hidden" name="tournament_id" value={id} />
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="show_seeds_publicly"
-                defaultChecked={tournament.show_seeds_publicly}
-                className="mt-0.5"
-              />
-              <span>
-                Show seed numbers to players
-                <span className="block text-xs text-[var(--color-muted)]">
-                  When unchecked, players see the entries list and bracket
-                  without seed numbers. You can still set and use seeds behind
-                  the scenes.
-                </span>
-              </span>
-            </label>
-            <button
-              type="submit"
-              className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50 shrink-0"
-            >
-              Save
-            </button>
-          </form>
+          <div className="mb-4">
+            <SeedVisibilityToggle
+              tournamentId={id}
+              showSeedsPublicly={tournament.show_seeds_publicly}
+              returnTo="entries"
+            />
+          </div>
           <form action={saveSeeds} className="space-y-3">
             <input type="hidden" name="tournament_id" value={id} />
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
@@ -461,12 +440,26 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 </li>
               ))}
             </ul>
-            <button
-              type="submit"
-              className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-            >
-              Save seeds
-            </button>
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="submit"
+                className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+              >
+                Save seeds
+              </button>
+              {entries.some((e) => e.seed != null) && (
+                // formAction overrides the parent form's saveSeeds action so
+                // we don't need a second form. tdClearSeeds only reads
+                // tournament_id; the seed_* inputs are ignored.
+                <button
+                  type="submit"
+                  formAction={tdClearSeeds}
+                  className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-100"
+                >
+                  Clear all seeds
+                </button>
+              )}
+            </div>
           </form>
         </section>
       )}

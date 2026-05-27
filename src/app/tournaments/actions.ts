@@ -134,5 +134,6 @@ export async function updateTournament(formData: FormData) {
   }
   revalidatePath(`/tournaments/${id}`)
   revalidatePath(`/tournaments/${id}/manage`)
+  revalidatePath(`/tournaments/${id}/entries`)
   redirect(`/tournaments/${id}/manage?ok=1`)
 }
