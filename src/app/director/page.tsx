@@ -164,12 +164,6 @@ export default async function DirectorDashboardPage() {
                       Manage
                     </Link>
                     <Link
-                      href={`/tournaments/${t.id}/participants`}
-                      className="rounded border border-[var(--color-border)] px-3 py-1.5 hover:bg-zinc-50"
-                    >
-                      Participants
-                    </Link>
-                    <Link
                       href={`/tournaments/${t.id}/entries`}
                       className="rounded border border-[var(--color-border)] px-3 py-1.5 hover:bg-zinc-50"
                     >

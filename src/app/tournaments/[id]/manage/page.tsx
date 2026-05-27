@@ -76,8 +76,8 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
     : { data: [] }
 
   return (
-    <div className="max-w-xl mx-auto py-6 space-y-8">
-      <h1 className="text-2xl font-semibold">Manage tournament</h1>
+    <div className="max-w-xl mx-auto space-y-8">
+      <h2 className="text-xl font-medium">Manage tournament</h2>
       {error && (
         <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}

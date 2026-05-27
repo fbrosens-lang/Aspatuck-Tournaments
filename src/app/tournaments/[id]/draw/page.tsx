@@ -63,18 +63,12 @@ export default async function DrawPage({ params, searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <header>
-        <Link
-          href={`/tournaments/${id}`}
-          className="text-sm text-[var(--color-muted)] hover:underline"
-        >
-          ← Tournament
-        </Link>
-        <h1 className="text-2xl font-semibold mt-1">Draw · {tournament.name}</h1>
+      <div>
+        <h2 className="text-xl font-medium">Draw</h2>
         <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mt-1">
           Draw status: {tournament.draw_status}
         </p>
-      </header>
+      </div>
 
       {error && (
         <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">

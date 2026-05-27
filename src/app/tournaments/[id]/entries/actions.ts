@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { parseFlexibleDate } from '@/lib/dates'
 import { createClient } from '@/lib/supabase/server'
 
 function backUrl(tid: string, error?: string, ok?: string) {
@@ -118,6 +119,41 @@ export async function tdEnterGuest(formData: FormData) {
   revalidatePath(`/tournaments/${tid}`)
   revalidatePath(`/tournaments/${tid}/entries`)
   redirect(backUrl(tid, undefined, addedOk(part?.display_name ?? 'Guest')))
+}
+
+export async function tdAddAndEnterGuest(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const name = String(formData.get('name') ?? '').trim()
+  const email = String(formData.get('email') ?? '').trim()
+  const dobRaw = String(formData.get('dob') ?? '').trim()
+  const bypass = formData.get('bypass') === 'on'
+  if (!name) {
+    redirect(backUrl(tid, 'Guest name is required.'))
+  }
+  const dob = dobRaw ? parseFlexibleDate(dobRaw) : null
+  if (dobRaw && !dob) {
+    redirect(backUrl(tid, 'Date of birth must be MM/DD/YYYY'))
+  }
+  const supabase = await createClient()
+  const { data: newParticipantId, error: addErr } = await supabase.rpc(
+    'td_add_guest_participant',
+    {
+      p_tournament_id: tid,
+      p_name: name,
+      p_email: email,
+      p_dob: dob,
+    },
+  )
+  if (addErr) redirect(backUrl(tid, addErr.message))
+  const { error: enterErr } = await supabase.rpc('td_enter_guest', {
+    p_tournament_id: tid,
+    p_participant_id: newParticipantId as string,
+    p_bypass_requirements: bypass,
+  })
+  if (enterErr) redirect(backUrl(tid, enterErr.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, addedOk(name)))
 }
 
 export async function tdAcceptTeamInvite(formData: FormData) {

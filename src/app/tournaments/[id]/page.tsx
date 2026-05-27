@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getSession, isTdOfTournament } from '@/lib/auth'
@@ -97,55 +96,25 @@ export default async function TournamentPage({ params, searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">{tournament.name}</h1>
-          <p className="text-[var(--color-muted)] mt-1">
-            Runs from {formatDateLong(tournament.start_date)} to{' '}
-            {formatDateLong(tournament.end_date)}
-          </p>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            {tournament.kind} · {tournament.bracket_format} · {tournament.match_kind}
-            {tournament.requires_dob && ' · DOB required'}
-          </p>
-          <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mt-1">
-            Status: {tournament.status} · Draw: {tournament.draw_status}
-            {tournament.registration_deadline && (
-              <> · Registration closes {new Date(tournament.registration_deadline).toLocaleString()}</>
-            )}
-          </p>
-        </div>
-        <div className="flex gap-2 text-sm">
-          {td && (
-            <>
-              <Link
-                href={`/tournaments/${id}/manage`}
-                className="rounded border border-[var(--color-border)] px-3 py-1.5 hover:bg-zinc-50"
-              >
-                Manage
-              </Link>
-              <Link
-                href={`/tournaments/${id}/participants`}
-                className="rounded border border-[var(--color-border)] px-3 py-1.5 hover:bg-zinc-50"
-              >
-                Participants
-              </Link>
-              <Link
-                href={`/tournaments/${id}/entries`}
-                className="rounded border border-[var(--color-border)] px-3 py-1.5 hover:bg-zinc-50"
-              >
-                Roster
-              </Link>
-              <Link
-                href={`/tournaments/${id}/draw`}
-                className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 hover:opacity-90"
-              >
-                Draw
-              </Link>
-            </>
+      {/* Tournament name + TD tabs are provided by the parent layout
+          (src/app/tournaments/[id]/layout.tsx); this page just adds the
+          tournament's descriptive metadata under that shared header. */}
+      <div>
+        <p className="text-[var(--color-muted)]">
+          Runs from {formatDateLong(tournament.start_date)} to{' '}
+          {formatDateLong(tournament.end_date)}
+        </p>
+        <p className="text-sm text-[var(--color-muted)] mt-1">
+          {tournament.kind} · {tournament.bracket_format} · {tournament.match_kind}
+          {tournament.requires_dob && ' · DOB required'}
+        </p>
+        <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mt-1">
+          Status: {tournament.status} · Draw: {tournament.draw_status}
+          {tournament.registration_deadline && (
+            <> · Registration closes {new Date(tournament.registration_deadline).toLocaleString()}</>
           )}
-        </div>
-      </header>
+        </p>
+      </div>
 
       {error && (
         <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">

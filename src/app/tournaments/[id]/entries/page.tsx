@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
@@ -6,6 +5,7 @@ import {
   saveSeeds,
   setSeedsVisibility,
   tdAcceptTeamInvite,
+  tdAddAndEnterGuest,
   tdDeclineTeamInvite,
   tdEnterMember,
   tdEnterGuest,
@@ -90,15 +90,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
 
   return (
     <div className="space-y-6">
-      <header>
-        <Link
-          href={`/tournaments/${id}`}
-          className="text-sm text-[var(--color-muted)] hover:underline"
-        >
-          ← Tournament
-        </Link>
-        <h1 className="text-2xl font-semibold mt-1">Roster · {tournament.name}</h1>
-      </header>
+      <h2 className="text-xl font-medium">Roster</h2>
 
       {error && (
         <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -213,15 +205,8 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             <p className="text-sm text-[var(--color-muted)] mb-3">
               Pick anyone from the Aspatuck directory. They&apos;ll be entered
               as a member whether or not they have an account. To enter
-              someone who isn&apos;t in the directory, add them as a guest on
-              the{' '}
-              <Link
-                href={`/tournaments/${id}/participants`}
-                className="underline"
-              >
-                Participants page
-              </Link>{' '}
-              first.
+              someone who isn&apos;t in the directory, use{' '}
+              <strong>Add a new guest</strong> below.
             </p>
             <form
               action={tdEnterClubMember}
@@ -286,16 +271,64 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           </section>
 
           <section className="bg-white border border-[var(--color-border)] rounded p-4">
-            <h2 className="font-medium mb-3">Enter a guest</h2>
-            {(!guests || guests.length === 0) ? (
-              <p className="text-sm text-[var(--color-muted)]">
-                No guests yet —{' '}
-                <Link href={`/tournaments/${id}/participants`} className="underline">
-                  add one
-                </Link>{' '}
-                first.
+            <h2 className="font-medium mb-3">Add a new guest</h2>
+            <p className="text-sm text-[var(--color-muted)] mb-3">
+              For non-account players who aren&apos;t in the club directory.
+              They&apos;re added and entered into the roster in one step.
+            </p>
+            <form
+              action={tdAddAndEnterGuest}
+              className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
+            >
+              <input type="hidden" name="tournament_id" value={id} />
+              <label className="block sm:col-span-2">
+                <span className="text-sm">Display name</span>
+                <input
+                  name="name"
+                  required
+                  className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm">Email (optional)</span>
+                <input
+                  type="email"
+                  name="email"
+                  className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm">Date of birth (optional)</span>
+                <input
+                  type="text"
+                  name="dob"
+                  placeholder="MM/DD/YYYY"
+                  inputMode="numeric"
+                  autoComplete="bday"
+                  pattern="\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}|\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}"
+                  title="Type the date as MM/DD/YYYY (e.g. 03/14/1975)"
+                  className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm sm:col-span-4">
+                <input type="checkbox" name="bypass" /> Bypass requirements
+              </label>
+              <button
+                type="submit"
+                className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-4 justify-self-start"
+              >
+                Add and enter guest
+              </button>
+            </form>
+          </section>
+
+          {guests && guests.length > 0 && (
+            <section className="bg-white border border-[var(--color-border)] rounded p-4">
+              <h2 className="font-medium mb-3">Re-enter an existing guest</h2>
+              <p className="text-sm text-[var(--color-muted)] mb-3">
+                Pick a guest who was previously added to this tournament — handy
+                for re-entering someone after they were withdrawn.
               </p>
-            ) : (
               <form action={tdEnterGuest} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                 <input type="hidden" name="tournament_id" value={id} />
                 <label className="block sm:col-span-3">
@@ -314,13 +347,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 </label>
                 <button
                   type="submit"
-                  className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-4 justify-self-start"
+                  className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50 sm:col-span-4 justify-self-start"
                 >
                   Enter guest
                 </button>
               </form>
-            )}
-          </section>
+            </section>
+          )}
         </>
       )}
 
@@ -329,15 +362,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           <h2 className="font-medium mb-3">Enter a doubles team</h2>
           <p className="text-sm text-[var(--color-muted)] mb-3">
             Pick both partners from the club directory. They&apos;re entered as
-            members whether or not they have an account. To add someone who
-            isn&apos;t in the directory, add them as a guest on the{' '}
-            <Link
-              href={`/tournaments/${id}/participants`}
-              className="underline"
-            >
-              Participants page
-            </Link>{' '}
-            first.
+            members whether or not they have an account.
           </p>
           <form
             action={tdEnterTeamFromClubMembers}
