@@ -248,101 +248,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      {userId && (
-        <section>
-          <h2 className="text-xl font-medium mb-3">Your matches</h2>
-          {!myMatches || myMatches.length === 0 ? (
-            <div className="rounded border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted)]">
-              No matches awaiting a score from you right now.
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {myMatches.map((m) => (
-                <li
-                  key={m.match_id}
-                  className="rounded border border-[var(--color-border)] bg-white"
-                >
-                  <Link
-                    href={`/matches/${m.match_id}`}
-                    className="flex items-center justify-between p-3 hover:bg-zinc-50"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        vs {m.opponent_label}
-                        <span
-                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${PLAYER_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
-                        >
-                          {PLAYER_STATUS_LABEL[m.match_status] ?? m.match_status}
-                        </span>
-                      </p>
-                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                        {m.tournament_name} · Round {m.round}
-                        {m.deadline && (
-                          <> · due {new Date(m.deadline).toLocaleString()}</>
-                        )}
-                      </p>
-                    </div>
-                    <span className="text-sm text-[var(--color-accent)] hover:underline">
-                      Enter result →
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
-      {tdMatches && (
-        <section>
-          <h2 className="text-xl font-medium mb-3">
-            Matches needing attention{' '}
-            <span className="text-sm text-[var(--color-muted)] font-normal">
-              (TD view · {tdMatches.length})
-            </span>
-          </h2>
-          {tdMatches.length === 0 ? (
-            <div className="rounded border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted)]">
-              No open matches in your tournaments.
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {tdMatches.map((m) => (
-                <li
-                  key={m.match_id}
-                  className="rounded border border-[var(--color-border)] bg-white"
-                >
-                  <Link
-                    href={`/matches/${m.match_id}`}
-                    className="flex items-center justify-between p-3 hover:bg-zinc-50"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {m.side_a_label} vs {m.side_b_label}
-                        <span
-                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${TD_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
-                        >
-                          {TD_STATUS_LABEL[m.match_status] ?? m.match_status}
-                        </span>
-                      </p>
-                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                        {m.tournament_name} · Round {m.round}
-                        {m.deadline && (
-                          <> · due {new Date(m.deadline).toLocaleString()}</>
-                        )}
-                      </p>
-                    </div>
-                    <span className="text-sm text-[var(--color-accent)] hover:underline">
-                      Enter / override →
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
       <section>
         <div>
           <h1 className="text-3xl font-semibold">Tournaments</h1>
@@ -395,6 +300,101 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+      {tdMatches && (
+        <section>
+          <h2 className="text-xl font-medium mb-3">
+            Matches needing attention{' '}
+            <span className="text-sm text-[var(--color-muted)] font-normal">
+              (TD view · {tdMatches.length})
+            </span>
+          </h2>
+          {tdMatches.length === 0 ? (
+            <div className="rounded border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted)]">
+              No open matches in your tournaments.
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {tdMatches.map((m) => (
+                <li
+                  key={m.match_id}
+                  className="rounded border border-[var(--color-border)] bg-white"
+                >
+                  <Link
+                    href={`/matches/${m.match_id}`}
+                    className="flex items-center justify-between p-3 hover:bg-zinc-50"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {m.side_a_label} vs {m.side_b_label}
+                        <span
+                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${TD_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                        >
+                          {TD_STATUS_LABEL[m.match_status] ?? m.match_status}
+                        </span>
+                      </p>
+                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                        {m.tournament_name} · Round {m.round}
+                        {m.deadline && (
+                          <> · due {new Date(m.deadline).toLocaleString()}</>
+                        )}
+                      </p>
+                    </div>
+                    <span className="text-sm text-[var(--color-accent)] hover:underline">
+                      Enter / override →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {userId && (
+        <section>
+          <h2 className="text-xl font-medium mb-3">Your matches</h2>
+          {!myMatches || myMatches.length === 0 ? (
+            <div className="rounded border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted)]">
+              No matches awaiting a score from you right now.
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {myMatches.map((m) => (
+                <li
+                  key={m.match_id}
+                  className="rounded border border-[var(--color-border)] bg-white"
+                >
+                  <Link
+                    href={`/matches/${m.match_id}`}
+                    className="flex items-center justify-between p-3 hover:bg-zinc-50"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        vs {m.opponent_label}
+                        <span
+                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${PLAYER_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                        >
+                          {PLAYER_STATUS_LABEL[m.match_status] ?? m.match_status}
+                        </span>
+                      </p>
+                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                        {m.tournament_name} · Round {m.round}
+                        {m.deadline && (
+                          <> · due {new Date(m.deadline).toLocaleString()}</>
+                        )}
+                      </p>
+                    </div>
+                    <span className="text-sm text-[var(--color-accent)] hover:underline">
+                      Enter result →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   )
 }
