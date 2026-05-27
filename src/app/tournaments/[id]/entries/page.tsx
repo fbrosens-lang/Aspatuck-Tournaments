@@ -447,18 +447,16 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               >
                 Save seeds
               </button>
-              {entries.some((e) => e.seed != null) && (
-                // formAction overrides the parent form's saveSeeds action so
-                // we don't need a second form. tdClearSeeds only reads
-                // tournament_id; the seed_* inputs are ignored.
-                <button
-                  type="submit"
-                  formAction={tdClearSeeds}
-                  className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-100"
-                >
-                  Clear all seeds
-                </button>
-              )}
+              {/* formAction overrides the parent form's saveSeeds action so
+                  we don't need a second form. tdClearSeeds only reads
+                  tournament_id; the seed_* inputs are ignored. */}
+              <button
+                type="submit"
+                formAction={tdClearSeeds}
+                className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-100"
+              >
+                Clear all seeds
+              </button>
             </div>
           </form>
         </section>
