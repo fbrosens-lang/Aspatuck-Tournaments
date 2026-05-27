@@ -6,6 +6,7 @@ import { Bracket } from '@/components/Bracket'
 import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
 import { byLastName, lastName } from '@/lib/names'
 import {
+  fillByeSlot,
   generateDraw,
   regenerateDraw,
   publishDraw,
@@ -83,6 +84,7 @@ export default async function DrawPage({ params, searchParams }: Props) {
           {ok === 'swapped' && 'Entries swapped.'}
           {ok === 'replaced' && 'Participant replaced.'}
           {ok === 'substituted' && 'Substitute placed.'}
+          {ok === 'bye_filled' && 'Player added to the bye slot. The bye winner now has a first-round match.'}
           {ok === 'seeded' && 'Seeds saved.'}
         </p>
       )}
@@ -153,6 +155,84 @@ export default async function DrawPage({ params, searchParams }: Props) {
           />
         </section>
       )}
+
+      {(() => {
+        // First-round bye matches: round=1, main bracket, exactly one
+        // side populated. Built once here so the JSX below stays clean
+        // and we don't recompute on every form render. The bye winner's
+        // display name comes from the entries list we already loaded.
+        const byMain = (matches ?? []).filter((m) => m.bracket === 'main')
+        const entryById = new Map(entries.map((e) => [e.id, e]))
+        const byes = byMain
+          .filter(
+            (m) =>
+              m.round === 1 &&
+              ((m.entry_a_id && !m.entry_b_id) ||
+                (!m.entry_a_id && m.entry_b_id)),
+          )
+          .map((m) => {
+            const winnerId = m.entry_a_id ?? m.entry_b_id
+            return {
+              matchId: m.id,
+              slot: m.slot,
+              byeWinner: winnerId ? entryById.get(winnerId)?.display ?? '—' : '—',
+            }
+          })
+        if (byes.length === 0 || tournament.kind !== 'singles') return null
+        return (
+          <section className="bg-white border border-[var(--color-border)] rounded p-4 space-y-3">
+            <div>
+              <h2 className="font-medium">Add player to a bye slot</h2>
+              <p className="text-sm text-[var(--color-muted)] mt-1">
+                Drops a brand-new player into an existing bye, turning it
+                into a real first-round match. The player who was getting
+                the free pass now has to play to advance. Scores already
+                reported elsewhere are untouched.
+              </p>
+            </div>
+            <ul className="divide-y divide-[var(--color-border)]">
+              {byes.map((b) => (
+                <li key={b.matchId} className="py-3">
+                  <form
+                    action={fillByeSlot}
+                    className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-3 items-end"
+                  >
+                    <input type="hidden" name="tournament_id" value={id} />
+                    <input type="hidden" name="match_id" value={b.matchId} />
+                    <div className="text-sm">
+                      <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                        Bye slot {b.slot + 1}
+                      </div>
+                      <div className="font-medium">{b.byeWinner}</div>
+                    </div>
+                    <label className="block">
+                      <span className="text-sm">Add player</span>
+                      <select
+                        name="club_member_id"
+                        required
+                        className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+                      >
+                        <option value="">— pick from directory —</option>
+                        {clubMembers?.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.full_name} · {m.email}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="submit"
+                      className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 justify-self-start sm:justify-self-auto"
+                    >
+                      Fill bye
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })()}
 
       {hasDraw && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4 space-y-3">

@@ -90,3 +90,31 @@ export async function substituteFromDirectory(formData: FormData) {
   revalidatePath(`/tournaments/${tid}/draw`)
   redirect(backUrl(tid, undefined, 'substituted'))
 }
+
+/**
+ * Adds a brand-new player into an existing R1 bye slot, turning what
+ * would have been a free pass into a real first-round match. The bye
+ * winner's auto-advance into R2 is unwound by the RPC. The action just
+ * wires the form values through and surfaces the RPC's error message
+ * verbatim (which already includes friendly text like "already played
+ * in a later round — withdraw and regenerate instead").
+ */
+export async function fillByeSlot(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const matchId = String(formData.get('match_id') ?? '')
+  const clubMemberId = String(formData.get('club_member_id') ?? '')
+  if (!matchId || !clubMemberId) {
+    redirect(backUrl(tid, 'Pick a player and a bye slot.'))
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_add_player_to_bye_slot', {
+    p_tournament_id: tid,
+    p_club_member_id: clubMemberId,
+    p_match_id: matchId,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/draw`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, 'bye_filled'))
+}
