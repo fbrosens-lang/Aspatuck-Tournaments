@@ -31,8 +31,15 @@ export function TournamentTabs({ tournamentId, isTd }: Props) {
     )
   }
 
+  // Below sm: stay on one horizontally-scrollable row (snap-x keeps tabs
+  // aligned). At sm+: wrap if needed — there's enough room for all four.
+  // -mx-4 + px-4 lets the scroll bleed to the viewport edge on phones so
+  // the rightmost tab isn't cut off by the page's outer padding.
   return (
-    <nav className="flex flex-wrap gap-2 text-sm">
+    <nav
+      className="flex gap-2 text-sm overflow-x-auto sm:overflow-visible snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap"
+      style={{ scrollbarWidth: 'none' }}
+    >
       {tabs.map((t) => {
         const isActive = pathname === t.href
         return (
@@ -41,9 +48,10 @@ export function TournamentTabs({ tournamentId, isTd }: Props) {
             href={t.href}
             aria-current={isActive ? 'page' : undefined}
             className={
-              isActive
-                ? 'rounded bg-[var(--color-accent)] text-white px-3 py-1.5'
-                : 'rounded border border-[var(--color-border)] px-3 py-1.5 hover:bg-zinc-50'
+              'snap-start shrink-0 min-h-11 inline-flex items-center ' +
+              (isActive
+                ? 'rounded bg-[var(--color-accent)] text-white px-3'
+                : 'rounded border border-[var(--color-border)] px-3 hover:bg-zinc-50')
             }
           >
             {t.label}

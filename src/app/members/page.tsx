@@ -239,106 +239,191 @@ export default async function MembersPage({ searchParams }: Props) {
             No matches.
           </div>
         ) : (
-          <table className="w-full text-sm bg-white border border-[var(--color-border)] rounded">
-            <thead className="text-left text-[var(--color-muted)] uppercase text-xs">
-              <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Email</th>
-                {canEdit && <th className="px-4 py-2 font-medium">DOB</th>}
-                {canEdit && <th className="px-4 py-2 font-medium">Linked</th>}
-                {canEdit && <th className="px-4 py-2 font-medium"></th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
-              {members.map((m) => (
-                <tr key={m.id}>
-                  <td className="px-4 py-2">{m.full_name}</td>
-                  <td className="px-4 py-2 text-[var(--color-muted)]">
-                    <a href={`mailto:${m.email}`} className="hover:underline">
-                      {m.email}
-                    </a>
-                  </td>
-                  {canEdit && (
+          <>
+            {/* Desktop / tablet table. Hidden on phones — the 5-column
+                layout (with the Link-to-account combobox) doesn't fit. */}
+            <table className="hidden sm:table w-full text-sm bg-white border border-[var(--color-border)] rounded">
+              <thead className="text-left text-[var(--color-muted)] uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Name</th>
+                  <th className="px-4 py-2 font-medium">Email</th>
+                  {canEdit && <th className="px-4 py-2 font-medium">DOB</th>}
+                  {canEdit && <th className="px-4 py-2 font-medium">Linked</th>}
+                  {canEdit && <th className="px-4 py-2 font-medium"></th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-border)]">
+                {members.map((m) => (
+                  <tr key={m.id}>
+                    <td className="px-4 py-2">{m.full_name}</td>
                     <td className="px-4 py-2 text-[var(--color-muted)]">
-                      {formatDateUS(m.date_of_birth)}
+                      <a href={`mailto:${m.email}`} className="hover:underline">
+                        {m.email}
+                      </a>
                     </td>
-                  )}
-                  {canEdit && (
-                  <td className="px-4 py-2">
-                    {m.user_id ? (
-                      <span className="inline-flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-xs text-green-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          account
-                        </span>
-                        {canEdit && (
-                          <form action={unlinkMember} className="inline">
-                            <input
-                              type="hidden"
-                              name="club_member_id"
-                              value={m.id}
-                            />
-                            <button
-                              type="submit"
-                              className="text-xs text-[var(--color-muted)] hover:underline"
-                              title="Disconnect this directory entry from the account it was linked to"
-                            >
-                              unlink
-                            </button>
-                          </form>
-                        )}
-                      </span>
-                    ) : canEdit && orphanItems.length > 0 ? (
-                      <form
-                        action={linkMemberToAccount}
-                        className="flex items-end gap-2 min-w-[260px]"
-                      >
-                        <input
-                          type="hidden"
-                          name="club_member_id"
-                          value={m.id}
-                        />
-                        <div className="flex-1">
-                          <Combobox
-                            name="user_id"
-                            items={orphanItems}
-                            required
-                            placeholder="Link to account…"
-                            ariaLabel="Account to link"
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50"
-                        >
-                          Link
-                        </button>
-                      </form>
-                    ) : (
-                      <span className="text-xs text-[var(--color-muted)]">—</span>
+                    {canEdit && (
+                      <td className="px-4 py-2 text-[var(--color-muted)]">
+                        {formatDateUS(m.date_of_birth)}
+                      </td>
                     )}
-                  </td>
-                  )}
-                  {canEdit && (
-                    <td className="px-4 py-2 text-right">
-                      <form
-                        action={deleteMember}
-                        className="inline"
+                    {canEdit && (
+                    <td className="px-4 py-2">
+                      {m.user_id ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-xs text-green-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            account
+                          </span>
+                          {canEdit && (
+                            <form action={unlinkMember} className="inline">
+                              <input
+                                type="hidden"
+                                name="club_member_id"
+                                value={m.id}
+                              />
+                              <button
+                                type="submit"
+                                className="text-xs text-[var(--color-muted)] hover:underline"
+                                title="Disconnect this directory entry from the account it was linked to"
+                              >
+                                unlink
+                              </button>
+                            </form>
+                          )}
+                        </span>
+                      ) : canEdit && orphanItems.length > 0 ? (
+                        <form
+                          action={linkMemberToAccount}
+                          className="flex items-end gap-2 min-w-[260px]"
+                        >
+                          <input
+                            type="hidden"
+                            name="club_member_id"
+                            value={m.id}
+                          />
+                          <div className="flex-1">
+                            <Combobox
+                              name="user_id"
+                              items={orphanItems}
+                              required
+                              placeholder="Link to account…"
+                              ariaLabel="Account to link"
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50"
+                          >
+                            Link
+                          </button>
+                        </form>
+                      ) : (
+                        <span className="text-xs text-[var(--color-muted)]">—</span>
+                      )}
+                    </td>
+                    )}
+                    {canEdit && (
+                      <td className="px-4 py-2 text-right">
+                        <form
+                          action={deleteMember}
+                          className="inline"
+                        >
+                          <input type="hidden" name="id" value={m.id} />
+                          <button
+                            type="submit"
+                            className="text-xs text-red-700 hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </form>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Mobile: each member becomes a card. The link-to-account
+                combobox gets its own row underneath so it's not squeezed
+                into a column that would force horizontal scroll. */}
+            <ul className="sm:hidden divide-y divide-[var(--color-border)] bg-white border border-[var(--color-border)] rounded">
+              {members.map((m) => (
+                <li key={m.id} className="px-4 py-3 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{m.full_name}</div>
+                      <a
+                        href={`mailto:${m.email}`}
+                        className="text-sm text-[var(--color-muted)] hover:underline break-all"
                       >
+                        {m.email}
+                      </a>
+                      {canEdit && m.date_of_birth && (
+                        <div className="text-xs text-[var(--color-muted)] mt-1">
+                          DOB {formatDateUS(m.date_of_birth)}
+                        </div>
+                      )}
+                      {m.user_id ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-700 mt-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          linked account
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--color-muted)] mt-1 block">
+                          no linked account
+                        </span>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <form action={deleteMember} className="shrink-0">
                         <input type="hidden" name="id" value={m.id} />
                         <button
                           type="submit"
-                          className="text-xs text-red-700 hover:underline"
+                          className="min-h-11 inline-flex items-center text-xs text-red-700 hover:underline px-2"
                         >
                           Remove
                         </button>
                       </form>
-                    </td>
+                    )}
+                  </div>
+                  {canEdit && m.user_id && (
+                    <form action={unlinkMember}>
+                      <input type="hidden" name="club_member_id" value={m.id} />
+                      <button
+                        type="submit"
+                        className="min-h-11 inline-flex items-center text-xs text-[var(--color-muted)] hover:underline"
+                      >
+                        Unlink account
+                      </button>
+                    </form>
                   )}
-                </tr>
+                  {canEdit && !m.user_id && orphanItems.length > 0 && (
+                    <form
+                      action={linkMemberToAccount}
+                      className="flex items-end gap-2"
+                    >
+                      <input type="hidden" name="club_member_id" value={m.id} />
+                      <div className="flex-1 min-w-0">
+                        <Combobox
+                          name="user_id"
+                          items={orphanItems}
+                          required
+                          placeholder="Link to account…"
+                          ariaLabel="Account to link"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="rounded border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-zinc-50"
+                      >
+                        Link
+                      </button>
+                    </form>
+                  )}
+                </li>
               ))}
-            </tbody>
-          </table>
+            </ul>
+          </>
         )}
       </section>
     </div>

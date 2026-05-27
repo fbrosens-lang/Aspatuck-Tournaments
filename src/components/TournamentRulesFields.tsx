@@ -28,7 +28,7 @@ export function TournamentRulesFields({ mode, initial }: Props) {
   const i = initial
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="block">
           <span className="text-sm">Kind</span>
           <KindAutoSelect
@@ -55,7 +55,7 @@ export function TournamentRulesFields({ mode, initial }: Props) {
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="block">
           <span className="text-sm">Match format</span>
           <select
@@ -83,7 +83,7 @@ export function TournamentRulesFields({ mode, initial }: Props) {
         </label>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <label className="block">
           <span className="text-sm">Sets to win</span>
           <input

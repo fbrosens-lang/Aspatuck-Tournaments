@@ -109,7 +109,7 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block">
             <span className="text-sm">Start date</span>
             <input
@@ -157,7 +157,7 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
           }}
         />
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block">
             <span className="text-sm">Tournament status</span>
             <select

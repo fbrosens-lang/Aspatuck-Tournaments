@@ -490,7 +490,10 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               const pendingTeamInvite =
                 e.status === 'pending' && e.team_id !== null
               return (
-                <li key={e.id} className="px-4 py-2 flex items-center justify-between gap-3">
+                <li
+                  key={e.id}
+                  className="px-4 py-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Show the seed only for explicitly seeded entries. A
                         dash for unseeded keeps the column aligned without
@@ -509,7 +512,10 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  {/* Tap zones stay 44px high (min-h-11) so the small text
+                      links work on a phone without ballooning the visual
+                      chip — the padding extends the touch area. */}
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap pl-9 sm:pl-0">
                     {pendingTeamInvite && (
                       <>
                         <form action={tdAcceptTeamInvite}>
@@ -517,7 +523,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                           <input type="hidden" name="team_id" value={e.team_id!} />
                           <button
                             type="submit"
-                            className="text-xs text-emerald-700 hover:underline"
+                            className="min-h-11 inline-flex items-center px-2 text-xs text-emerald-700 hover:underline"
                             title="Confirm this team on behalf of the partner"
                           >
                             Accept for partner
@@ -528,7 +534,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                           <input type="hidden" name="team_id" value={e.team_id!} />
                           <button
                             type="submit"
-                            className="text-xs text-red-700 hover:underline"
+                            className="min-h-11 inline-flex items-center px-2 text-xs text-red-700 hover:underline"
                             title="Decline this team on behalf of the partner"
                           >
                             Decline for partner
@@ -541,7 +547,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                       <input type="hidden" name="entry_id" value={e.id} />
                       <button
                         type="submit"
-                        className="text-xs text-red-700 hover:underline"
+                        className="min-h-11 inline-flex items-center px-2 text-xs text-red-700 hover:underline"
                       >
                         Withdraw
                       </button>
