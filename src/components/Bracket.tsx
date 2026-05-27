@@ -164,7 +164,7 @@ export function Bracket({
                             {isNotFirstRound && (
                               <span
                                 aria-hidden
-                                className="absolute right-full top-1/2 w-2 sm:w-3 border-t-2 border-zinc-500"
+                                className="absolute right-full top-1/2 w-2 sm:w-3 border-t-[3px] border-zinc-700"
                               />
                             )}
 
@@ -181,7 +181,7 @@ export function Bracket({
                                     vertical bar. */}
                                 <span
                                   aria-hidden
-                                  className="absolute left-full top-1/2 w-2 sm:w-3 border-t-2 border-zinc-500"
+                                  className="absolute left-full top-1/2 w-2 sm:w-3 border-t-[3px] border-zinc-700"
                                 />
                                 {/* Vertical half of the connector. Upper
                                     member of the pair draws the BELOW
@@ -196,12 +196,12 @@ export function Bracket({
                                 {isUpperOfPair ? (
                                   <span
                                     aria-hidden
-                                    className="absolute top-1/2 bottom-0 border-r-2 border-zinc-500 left-[calc(100%+0.5rem)] sm:left-[calc(100%+0.75rem)]"
+                                    className="absolute top-1/2 bottom-0 border-r-[3px] border-zinc-700 left-[calc(100%+0.5rem)] sm:left-[calc(100%+0.75rem)]"
                                   />
                                 ) : (
                                   <span
                                     aria-hidden
-                                    className="absolute top-0 bottom-1/2 border-r-2 border-zinc-500 left-[calc(100%+0.5rem)] sm:left-[calc(100%+0.75rem)]"
+                                    className="absolute top-0 bottom-1/2 border-r-[3px] border-zinc-700 left-[calc(100%+0.5rem)] sm:left-[calc(100%+0.75rem)]"
                                   />
                                 )}
                               </>
