@@ -10,6 +10,7 @@ type TournamentRules = {
   requires_dob: boolean
   registration_deadline_override: string | null
   show_seeds_publicly: boolean
+  solo_only: boolean
 }
 
 type Props = {
@@ -136,6 +137,29 @@ export function TournamentRulesFields({ mode, initial }: Props) {
             defaultValue={toLocalInput(i?.registration_deadline_override)}
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
+        </label>
+      </fieldset>
+
+      {/* Calcutta-style flag — only meaningful for doubles. The server-side
+          CHECK constraint enforces "solo_only => kind=doubles", so we don't
+          gate the checkbox on the JS-side kind value. The TD picks the kind
+          and the solo-only flag together at create time. */}
+      <fieldset className="rounded border border-[var(--color-border)] p-3">
+        <legend className="text-sm px-1">Sign-up mode</legend>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="solo_only"
+            defaultChecked={i?.solo_only ?? false}
+            className="mt-0.5 h-4 w-4"
+          />
+          <span>
+            Solo-only sign-ups (Calcutta-style)
+            <span className="block text-xs text-[var(--color-muted)]">
+              Players sign up individually; the TD forms teams by hat draw
+              later. Only meaningful for doubles tournaments.
+            </span>
+          </span>
         </label>
       </fieldset>
 

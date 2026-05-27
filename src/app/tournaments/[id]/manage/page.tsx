@@ -44,7 +44,7 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
   const { data: t } = await supabase
     .from('tournaments')
     .select(
-      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, final_set_format, sets_to_win, games_per_set, tiebreak_at, requires_dob, registration_deadline_override, draw_status, show_seeds_publicly',
+      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, final_set_format, sets_to_win, games_per_set, tiebreak_at, requires_dob, registration_deadline_override, draw_status, show_seeds_publicly, solo_only',
     )
     .eq('id', id)
     .maybeSingle()
@@ -154,6 +154,7 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
             requires_dob: t.requires_dob,
             registration_deadline_override: t.registration_deadline_override,
             show_seeds_publicly: t.show_seeds_publicly,
+            solo_only: t.solo_only,
           }}
         />
 

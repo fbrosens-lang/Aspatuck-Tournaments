@@ -37,7 +37,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
   const supabase = await createClient()
   const { data: tournament } = await supabase
     .from('tournaments')
-    .select('id, name, kind, draw_status, show_seeds_publicly')
+    .select('id, name, kind, draw_status, show_seeds_publicly, solo_only')
     .eq('id', id)
     .maybeSingle()
   if (!tournament) notFound()
@@ -218,7 +218,12 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         </div>
       </section>
 
-      {tournament.kind === 'singles' && (
+      {/* Individual-entry TD forms. These create solo entries — for singles
+          tournaments (always) and for Calcutta-style doubles where teams
+          are formed by hat draw later. Normal doubles uses the "Enter a
+          doubles team" section below instead. */}
+      {(tournament.kind === 'singles' ||
+        (tournament.kind === 'doubles' && tournament.solo_only)) && (
         <>
           <section className="bg-white border border-[var(--color-border)] rounded p-4">
             <h2 className="font-medium mb-3">Enter from the club directory</h2>
@@ -371,6 +376,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           unpaired entry. The Combobox for each row offers every OTHER
           unpaired entry (so the TD can't pick the same player twice). */}
       {tournament.kind === 'doubles' &&
+        !tournament.solo_only &&
         (() => {
           const unpaired = entries.filter((e) => e.status === 'unpaired')
           if (unpaired.length === 0) return null
@@ -446,7 +452,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           )
         })()}
 
-      {tournament.kind === 'doubles' && (
+      {tournament.kind === 'doubles' && !tournament.solo_only && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4">
           <h2 className="font-medium mb-3">Enter a doubles team</h2>
           <p className="text-sm text-[var(--color-muted)] mb-3">

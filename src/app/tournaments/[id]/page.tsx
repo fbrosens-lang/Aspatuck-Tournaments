@@ -35,7 +35,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   const { data: tournament } = await supabase
     .from('tournaments')
     .select(
-      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, draw_status, requires_dob, show_seeds_publicly',
+      'id, name, start_date, end_date, registration_deadline, status, kind, bracket_format, match_kind, draw_status, requires_dob, show_seeds_publicly, solo_only',
     )
     .eq('id', id)
     .maybeSingle()
@@ -74,10 +74,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
   // profiles), so a captain can pick a partner who hasn't created an account
   // yet. If the partner has a linked account they'll see the invite on their
   // home page; if they don't, signing up later auto-links them to the team.
+  // Skip the query for solo-only (Calcutta) tournaments — the partner picker
+  // isn't rendered there, so the data goes unused.
   let partnerCandidates: ComboboxItem[] = []
   if (
     userId &&
     tournament.kind === 'doubles' &&
+    !tournament.solo_only &&
     canRegister &&
     myState.kind === 'none'
   ) {
@@ -110,6 +113,11 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           {tournament.kind} · {tournament.bracket_format} · {tournament.match_kind}
           {tournament.requires_dob && ' · DOB required'}
         </p>
+        {tournament.solo_only && (
+          <p className="text-xs rounded bg-amber-100 text-amber-800 px-2 py-1 mt-2 inline-block">
+            Solo sign-ups only — TD draws teams later
+          </p>
+        )}
         <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mt-1">
           Status: {tournament.status} · Draw: {tournament.draw_status}
           {tournament.registration_deadline && (
@@ -134,6 +142,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
           <RegisterPanel
             tournamentId={id}
             kind={tournament.kind as 'singles' | 'doubles'}
+            soloOnly={tournament.solo_only}
             tournamentStatus={tournament.status as 'draft' | 'open' | 'closed' | 'complete'}
             drawStatus={tournament.draw_status as 'open' | 'seeded' | 'drawn' | 'in_progress' | 'complete'}
             canRegister={canRegister}

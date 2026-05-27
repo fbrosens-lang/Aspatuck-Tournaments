@@ -33,6 +33,10 @@ type DrawStatus = 'open' | 'seeded' | 'drawn' | 'in_progress' | 'complete'
 type Props = {
   tournamentId: string
   kind: 'singles' | 'doubles'
+  /** Calcutta-style: doubles tournament that only accepts solo sign-ups;
+   *  the TD forms teams by hat draw later. When true, the partner picker
+   *  is hidden and only the solo button is shown. */
+  soloOnly?: boolean
   tournamentStatus: TournamentStatus
   drawStatus: DrawStatus
   canRegister: boolean
@@ -65,6 +69,7 @@ function closedReason(
 export function RegisterPanel({
   tournamentId,
   kind,
+  soloOnly = false,
   tournamentStatus,
   drawStatus,
   canRegister,
@@ -207,6 +212,30 @@ export function RegisterPanel({
   }
 
   if (kind === 'doubles') {
+    // Calcutta-style: no partner picker, only the solo button. The TD
+    // forms teams by hat draw outside the app, so there's no concept of
+    // "signing up with a partner" for this kind of tournament.
+    if (soloOnly) {
+      return (
+        <div className="rounded border border-[var(--color-border)] bg-white p-4 space-y-3">
+          <h2 className="font-semibold">Player Sign Up</h2>
+          <p className="text-sm">
+            This tournament is solo sign-up only — the TD will draw teams by
+            hat before the bracket is built.
+          </p>
+          <form action={registerSoloInDoubles}>
+            <input type="hidden" name="tournament_id" value={tournamentId} />
+            <button
+              type="submit"
+              className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
+            >
+              Sign me up
+            </button>
+          </form>
+        </div>
+      )
+    }
+
     return (
       <div className="rounded border border-[var(--color-border)] bg-white p-4 space-y-4">
         <h2 className="font-semibold">Player Sign Up</h2>
