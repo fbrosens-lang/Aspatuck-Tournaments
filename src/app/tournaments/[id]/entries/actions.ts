@@ -43,6 +43,35 @@ export async function tdEnterMember(formData: FormData) {
   redirect(backUrl(tid, undefined, addedOk(profile?.full_name ?? 'Entry')))
 }
 
+/**
+ * TD-only: pair two solo entries into a confirmed team entry. Used to
+ * resolve the "I'll sign up alone, find me a partner" flow that lets
+ * players join a doubles tournament without already having a partner
+ * lined up. The RPC builds the team auto-accepted (since the TD is
+ * acting on behalf of both players) and consumes both solo entries.
+ */
+export async function tdPairSoloEntries(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const a = String(formData.get('entry_a_id') ?? '')
+  const b = String(formData.get('entry_b_id') ?? '')
+  if (!a || !b) {
+    redirect(backUrl(tid, 'Pick two unpaired players.'))
+  }
+  if (a === b) {
+    redirect(backUrl(tid, 'Pick two different players.'))
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_pair_solo_entries', {
+    p_tournament_id: tid,
+    p_entry_a_id: a,
+    p_entry_b_id: b,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, 'paired'))
+}
+
 export async function tdEnterClubMember(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const clubMemberId = String(formData.get('club_member_id') ?? '')

@@ -20,6 +20,8 @@ type Props = {
 const OK_MESSAGES: Record<string, string> = {
   registered: 'You’re registered.',
   invited: 'Invite sent. Your partner will see it on their home page.',
+  registered_solo:
+    'You’re signed up solo. The tournament director will pair you with another solo player.',
   withdrawn: 'Withdrawn.',
   accepted: 'Invite accepted.',
   declined: 'Invite declined.',

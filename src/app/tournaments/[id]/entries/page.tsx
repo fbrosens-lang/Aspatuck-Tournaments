@@ -11,6 +11,7 @@ import {
   tdEnterGuest,
   tdEnterClubMember,
   tdEnterTeamFromClubMembers,
+  tdPairSoloEntries,
   tdWithdrawEntry,
   tdRegenerateDraw,
   tdClearDraw,
@@ -49,6 +50,10 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
     .eq('tournament_id', id)
   const drawExists = (matchCount ?? 0) > 0
   const confirmedCount = entries.filter((e) => e.status === 'confirmed').length
+  // Unpaired entries can't be drawn into the bracket — they need a
+  // partner first. We surface them in the "no draw yet" copy below so
+  // the TD knows why the Generate button stays disabled.
+  const unpairedCount = entries.filter((e) => e.status === 'unpaired').length
 
   const { data: rawMembers } = await supabase
     .from('profiles')
@@ -109,6 +114,8 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               return 'Team invite accepted on behalf of the partner. The entry is now confirmed.'
             if (ok === 'team_declined')
               return 'Team invite declined on behalf of the partner. The entry has been withdrawn.'
+            if (ok === 'paired')
+              return 'Players paired. The two solo entries are now one confirmed team.'
             if (ok === 'seeded') return 'Seeds saved.'
             if (ok === 'seeds_cleared')
               return 'All seeds cleared. Add fresh seed numbers and regenerate the draw when ready.'
@@ -154,6 +161,16 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 <>
                   Once you have at least 2 confirmed entries, generate the draw
                   to build the bracket.
+                  {unpairedCount > 0 && (
+                    <>
+                      {' '}
+                      {unpairedCount}{' '}
+                      {unpairedCount === 1
+                        ? 'player is still unpaired'
+                        : 'players are still unpaired'}{' '}
+                      — pair them above before generating.
+                    </>
+                  )}
                 </>
               )}
             </p>
@@ -359,6 +376,87 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           )}
         </>
       )}
+
+      {/* Unpaired players — solo sign-ups in a doubles tournament that
+          need a partner before the draw is generated. We only show
+          the section for doubles tournaments with at least one
+          unpaired entry. The Combobox for each row offers every OTHER
+          unpaired entry (so the TD can't pick the same player twice). */}
+      {tournament.kind === 'doubles' &&
+        (() => {
+          const unpaired = entries.filter((e) => e.status === 'unpaired')
+          if (unpaired.length === 0) return null
+          return (
+            <section className="bg-white border border-amber-300 bg-amber-50 rounded p-4">
+              <h2 className="font-medium">
+                Unpaired players{' '}
+                <span className="text-sm text-[var(--color-muted)] font-normal">
+                  ({unpaired.length})
+                </span>
+              </h2>
+              <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
+                These players signed up solo. Pair two of them into a team to
+                make a confirmed entry. The draw can&apos;t be generated while
+                anyone is still unpaired.
+                {unpaired.length === 1 && (
+                  <>
+                    {' '}
+                    Need one more solo sign-up before pairing is possible — or
+                    enter a team directly above.
+                  </>
+                )}
+              </p>
+              <ul className="space-y-2">
+                {unpaired.map((u) => {
+                  const otherUnpaired: ComboboxItem[] = unpaired
+                    .filter((o) => o.id !== u.id)
+                    .map((o) => ({ value: o.id, label: o.display }))
+                  return (
+                    <li
+                      key={u.id}
+                      className="rounded border border-[var(--color-border)] bg-white p-3"
+                    >
+                      <form
+                        action={tdPairSoloEntries}
+                        className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-3 items-end"
+                      >
+                        <input type="hidden" name="tournament_id" value={id} />
+                        <input type="hidden" name="entry_a_id" value={u.id} />
+                        <div className="text-sm">
+                          <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                            Solo
+                          </div>
+                          <div className="font-medium">{u.display}</div>
+                        </div>
+                        <label className="block">
+                          <span className="text-sm">Pair with</span>
+                          <Combobox
+                            name="entry_b_id"
+                            items={otherUnpaired}
+                            required
+                            placeholder={
+                              otherUnpaired.length === 0
+                                ? 'No other unpaired players'
+                                : 'Type a name…'
+                            }
+                            ariaLabel="Partner to pair with"
+                          />
+                        </label>
+                        <button
+                          type="submit"
+                          disabled={otherUnpaired.length === 0}
+                          className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed justify-self-start sm:justify-self-auto"
+                        >
+                          Pair
+                        </button>
+                      </form>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )
+        })()}
 
       {tournament.kind === 'doubles' && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4">

@@ -51,6 +51,25 @@ export async function registerTeam(formData: FormData) {
   redirect(backUrl(tid, undefined, 'invited'))
 }
 
+/**
+ * Sign up for a doubles tournament without a partner. The entry sits
+ * in `unpaired` status until a TD pairs the player with another solo.
+ * The player can withdraw at any time via the same Withdraw button on
+ * the tournament page.
+ */
+export async function registerSoloInDoubles(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  await requireSignedIn()
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('register_solo_for_doubles_tournament', {
+    p_tournament_id: tid,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath('/')
+  redirect(backUrl(tid, undefined, 'registered_solo'))
+}
+
 export async function withdrawSelf(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const entryId = String(formData.get('entry_id') ?? '')

@@ -87,6 +87,17 @@ export async function loadMyEntryState(
     .maybeSingle()
   if (!participant) return { kind: 'none' }
 
+  // We need the tournament kind to distinguish a real singles entry
+  // (status='confirmed' in a singles tournament) from an unpaired solo
+  // sign-up in a doubles tournament — both rows have participant_id
+  // set and team_id null, but they mean very different things to the
+  // UI.
+  const { data: tournament } = await supabase
+    .from('tournaments')
+    .select('kind')
+    .eq('id', tournamentId)
+    .maybeSingle()
+
   const { data: singlesEntry } = await supabase
     .from('entries')
     .select('id, status')
@@ -95,6 +106,9 @@ export async function loadMyEntryState(
     .neq('status', 'withdrawn')
     .maybeSingle()
   if (singlesEntry) {
+    if (tournament?.kind === 'doubles') {
+      return { kind: 'solo_in_doubles', entryId: singlesEntry.id }
+    }
     return { kind: 'singles', entryId: singlesEntry.id, status: singlesEntry.status }
   }
 

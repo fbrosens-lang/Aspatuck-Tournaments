@@ -2,6 +2,7 @@ import {
   acceptInvite,
   declineInvite,
   register,
+  registerSoloInDoubles,
   registerTeam,
   withdrawSelf,
 } from '@/app/tournaments/entry-actions'
@@ -10,6 +11,12 @@ import { Combobox, type ComboboxItem } from '@/components/Combobox'
 export type MyEntryState =
   | { kind: 'none' }
   | { kind: 'singles'; entryId: string; status: string }
+  /**
+   * Solo sign-up in a doubles tournament — the player has an entry but
+   * no team yet. They sit in this state until a TD pairs them with
+   * another solo on the Roster page.
+   */
+  | { kind: 'solo_in_doubles'; entryId: string }
   | {
       kind: 'team'
       role: 'captain' | 'partner'
@@ -82,6 +89,27 @@ export function RegisterPanel({
             your opponent as a walkover.
           </p>
         )}
+        <form action={withdrawSelf}>
+          <input type="hidden" name="tournament_id" value={tournamentId} />
+          <input type="hidden" name="entry_id" value={me.entryId} />
+          <button
+            type="submit"
+            className="rounded border border-red-300 text-red-700 px-3 py-1.5 text-sm hover:bg-red-50"
+          >
+            Withdraw
+          </button>
+        </form>
+      </div>
+    )
+  }
+
+  if (me.kind === 'solo_in_doubles') {
+    return (
+      <div className="rounded border border-amber-300 bg-amber-50 p-4 space-y-2">
+        <p className="text-sm">
+          You&apos;re signed up solo. The tournament director will pair you
+          with another solo player before the draw is generated.
+        </p>
         <form action={withdrawSelf}>
           <input type="hidden" name="tournament_id" value={tournamentId} />
           <input type="hidden" name="entry_id" value={me.entryId} />
@@ -180,34 +208,55 @@ export function RegisterPanel({
 
   if (kind === 'doubles') {
     return (
-      <form
-        action={registerTeam}
-        className="rounded border border-[var(--color-border)] bg-white p-4 space-y-3"
-      >
+      <div className="rounded border border-[var(--color-border)] bg-white p-4 space-y-4">
         <h2 className="font-semibold">Player Sign Up</h2>
-        <input type="hidden" name="tournament_id" value={tournamentId} />
-        <label className="block text-sm">
-          <span>Doubles partner</span>
-          <Combobox
-            name="partner_club_member_id"
-            items={partnerCandidates}
-            required
-            placeholder="Type your partner's name…"
-            ariaLabel="Doubles partner"
-          />
-        </label>
-        <p className="text-xs text-[var(--color-muted)]">
-          Pick anyone from the club directory. If your partner already has an
-          account, they&apos;ll see the invite on their home page. If not,
-          their team entry will be waiting for them when they sign up.
-        </p>
-        <button
-          type="submit"
-          className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
-        >
-          Sign up & invite partner
-        </button>
-      </form>
+
+        <form action={registerTeam} className="space-y-2">
+          <input type="hidden" name="tournament_id" value={tournamentId} />
+          <label className="block text-sm">
+            <span>Doubles partner</span>
+            <Combobox
+              name="partner_club_member_id"
+              items={partnerCandidates}
+              required
+              placeholder="Type your partner's name…"
+              ariaLabel="Doubles partner"
+            />
+          </label>
+          <p className="text-xs text-[var(--color-muted)]">
+            Pick anyone from the club directory. If your partner already has
+            an account, they&apos;ll see the invite on their home page. If
+            not, their team entry will be waiting for them when they sign up.
+          </p>
+          <button
+            type="submit"
+            className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
+          >
+            Sign up &amp; invite partner
+          </button>
+        </form>
+
+        {/* Solo path — for players who don't have a partner lined up.
+            The TD pairs them with another solo on the Roster page
+            before generating the draw. Visually divided so it doesn't
+            look like part of the partner form above. */}
+        <div className="pt-3 border-t border-[var(--color-border)] space-y-2">
+          <p className="text-sm">Don&apos;t have a partner?</p>
+          <form action={registerSoloInDoubles}>
+            <input type="hidden" name="tournament_id" value={tournamentId} />
+            <button
+              type="submit"
+              className="rounded border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-zinc-50"
+            >
+              Sign up solo — pair me up later
+            </button>
+          </form>
+          <p className="text-xs text-[var(--color-muted)]">
+            You&apos;ll show up on the Roster as unpaired. The TD will match
+            you with another solo before the draw is built.
+          </p>
+        </div>
+      </div>
     )
   }
 
