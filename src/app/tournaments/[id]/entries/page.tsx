@@ -233,7 +233,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
             >
               <input type="hidden" name="tournament_id" value={id} />
-              <label className="block sm:col-span-3">
+              <label className="block sm:col-span-4">
                 <span className="text-sm">Club member</span>
                 <Combobox
                   name="club_member_id"
@@ -243,9 +243,6 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   ariaLabel="Club member"
                   submitOnPick
                 />
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="bypass" /> Bypass requirements
               </label>
               <button
                 type="submit"
@@ -267,7 +264,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
             >
               <input type="hidden" name="tournament_id" value={id} />
-              <label className="block sm:col-span-3">
+              <label className="block sm:col-span-4">
                 <span className="text-sm">Account</span>
                 <Combobox
                   name="user_id"
@@ -277,9 +274,6 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   ariaLabel="Registered user"
                   submitOnPick
                 />
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="bypass" /> Bypass requirements
               </label>
               <button
                 type="submit"
@@ -330,9 +324,6 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
                 />
               </label>
-              <label className="flex items-center gap-2 text-sm sm:col-span-4">
-                <input type="checkbox" name="bypass" /> Bypass requirements
-              </label>
               <button
                 type="submit"
                 className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-4 justify-self-start"
@@ -351,7 +342,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               </p>
               <form action={tdEnterGuest} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                 <input type="hidden" name="tournament_id" value={id} />
-                <label className="block sm:col-span-3">
+                <label className="block sm:col-span-4">
                   <span className="text-sm">Guest participant</span>
                   <Combobox
                     name="participant_id"
@@ -361,9 +352,6 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                     ariaLabel="Guest participant"
                     submitOnPick
                   />
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" name="bypass" /> Bypass requirements
                 </label>
                 <button
                   type="submit"
@@ -489,9 +477,6 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 placeholder="Type a name…"
                 ariaLabel="Partner"
               />
-            </label>
-            <label className="flex items-center gap-2 text-sm sm:col-span-2">
-              <input type="checkbox" name="bypass" /> Bypass requirements
             </label>
             <button
               type="submit"

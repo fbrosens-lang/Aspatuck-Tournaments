@@ -22,7 +22,6 @@ function addedOk(name: string) {
 export async function tdEnterMember(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const userId = String(formData.get('user_id') ?? '')
-  const bypass = formData.get('bypass') === 'on'
   if (!userId) {
     redirect(backUrl(tid, 'Pick a registered user from the list.'))
   }
@@ -35,7 +34,7 @@ export async function tdEnterMember(formData: FormData) {
   const { error } = await supabase.rpc('td_enter_member', {
     p_tournament_id: tid,
     p_user_id: userId,
-    p_bypass_requirements: bypass,
+    p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
@@ -75,7 +74,6 @@ export async function tdPairSoloEntries(formData: FormData) {
 export async function tdEnterClubMember(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const clubMemberId = String(formData.get('club_member_id') ?? '')
-  const bypass = formData.get('bypass') === 'on'
   if (!clubMemberId) {
     redirect(backUrl(tid, 'Pick a member from the directory list.'))
   }
@@ -88,7 +86,7 @@ export async function tdEnterClubMember(formData: FormData) {
   const { error } = await supabase.rpc('td_enter_club_member', {
     p_tournament_id: tid,
     p_club_member_id: clubMemberId,
-    p_bypass_requirements: bypass,
+    p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
@@ -100,7 +98,6 @@ export async function tdEnterTeamFromClubMembers(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const captainId = String(formData.get('captain_club_member_id') ?? '')
   const partnerId = String(formData.get('partner_club_member_id') ?? '')
-  const bypass = formData.get('bypass') === 'on'
   if (!captainId || !partnerId) {
     redirect(backUrl(tid, 'Pick both partners from the directory.'))
   }
@@ -118,7 +115,7 @@ export async function tdEnterTeamFromClubMembers(formData: FormData) {
     p_tournament_id: tid,
     p_captain_club_member_id: captainId,
     p_partner_club_member_id: partnerId,
-    p_bypass_requirements: bypass,
+    p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
@@ -129,7 +126,6 @@ export async function tdEnterTeamFromClubMembers(formData: FormData) {
 export async function tdEnterGuest(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const participantId = String(formData.get('participant_id') ?? '')
-  const bypass = formData.get('bypass') === 'on'
   if (!participantId) {
     redirect(backUrl(tid, 'Pick a guest from the list.'))
   }
@@ -142,7 +138,7 @@ export async function tdEnterGuest(formData: FormData) {
   const { error } = await supabase.rpc('td_enter_guest', {
     p_tournament_id: tid,
     p_participant_id: participantId,
-    p_bypass_requirements: bypass,
+    p_bypass_requirements: true,
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
@@ -155,7 +151,6 @@ export async function tdAddAndEnterGuest(formData: FormData) {
   const name = String(formData.get('name') ?? '').trim()
   const email = String(formData.get('email') ?? '').trim()
   const dobRaw = String(formData.get('dob') ?? '').trim()
-  const bypass = formData.get('bypass') === 'on'
   if (!name) {
     redirect(backUrl(tid, 'Guest name is required.'))
   }
@@ -177,7 +172,7 @@ export async function tdAddAndEnterGuest(formData: FormData) {
   const { error: enterErr } = await supabase.rpc('td_enter_guest', {
     p_tournament_id: tid,
     p_participant_id: newParticipantId as string,
-    p_bypass_requirements: bypass,
+    p_bypass_requirements: true,
   })
   if (enterErr) redirect(backUrl(tid, enterErr.message))
   revalidatePath(`/tournaments/${tid}`)
