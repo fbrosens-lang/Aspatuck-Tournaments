@@ -120,33 +120,99 @@ export function Bracket({
           ref={scrollerRef}
           className="overflow-x-auto snap-x snap-mandatory"
         >
+          {/* The bracket lays out rounds left-to-right. The gap between
+              round columns (gap-4 sm:gap-6 = 16/24px) is also where the
+              connector lines live. Each match li uses flex-1 so adjacent
+              matches' centers are uniformly spaced — that's what makes
+              the connector geometry exact. The vertical line drawn by
+              an "upper" match (even slot index) goes from its center
+              down to its slot boundary; the "lower" match (odd slot)
+              draws the matching half going up. Together they form a
+              continuous vertical bar at the gap midpoint that passes
+              through the next-round match's center. */}
           <div className="flex gap-4 sm:gap-6 min-w-max items-stretch">
-            {rounds.map(([round, ms]) => (
-              <div
-                key={round}
-                ref={(el) => {
-                  columnRefs.current.set(round, el)
-                }}
-                className="snap-start flex flex-col justify-around w-[200px] sm:w-[220px] shrink-0"
-              >
-                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
-                  Round {round}
+            {rounds.map(([round, ms], roundIdx) => {
+              const hasNextRound = roundIdx < rounds.length - 1
+              const isNotFirstRound = roundIdx > 0
+              return (
+                <div
+                  key={round}
+                  ref={(el) => {
+                    columnRefs.current.set(round, el)
+                  }}
+                  className="snap-start flex flex-col w-[200px] sm:w-[220px] shrink-0"
+                >
+                  <div className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
+                    Round {round}
+                  </div>
+                  <ul className="flex flex-col flex-1">
+                    {ms
+                      .slice()
+                      .sort((a, b) => a.slot - b.slot)
+                      .map((m, idx) => {
+                        // Pair parity is by INDEX within the sorted round
+                        // (not by raw slot number) so that consolation or
+                        // partial brackets still pair adjacent siblings.
+                        const isUpperOfPair = idx % 2 === 0
+                        return (
+                          <li
+                            key={m.id}
+                            className="relative flex-1 flex items-center py-1.5"
+                          >
+                            {/* Incoming horizontal stub from the
+                                previous round's connector midpoint. */}
+                            {isNotFirstRound && (
+                              <span
+                                aria-hidden
+                                className="absolute right-full top-1/2 w-2 sm:w-3 border-t-2 border-zinc-500"
+                              />
+                            )}
+
+                            <div
+                              className={`rounded border bg-white w-full ${STATUS_CLASS[m.status]}`}
+                            >
+                              <MatchCard match={m} byId={byId} />
+                            </div>
+
+                            {hasNextRound && (
+                              <>
+                                {/* Outgoing horizontal stub toward the
+                                    gap midpoint where it meets the
+                                    vertical bar. */}
+                                <span
+                                  aria-hidden
+                                  className="absolute left-full top-1/2 w-2 sm:w-3 border-t-2 border-zinc-500"
+                                />
+                                {/* Vertical half of the connector. Upper
+                                    member of the pair draws the BELOW
+                                    half (top:50% to bottom:0), lower
+                                    draws the ABOVE half (top:0 to
+                                    bottom:50%). Their li bottoms touch
+                                    at the midpoint between their centers
+                                    — which is exactly the next round's
+                                    match center, because flex-1 gives
+                                    every li in a column the same
+                                    height. */}
+                                {isUpperOfPair ? (
+                                  <span
+                                    aria-hidden
+                                    className="absolute top-1/2 bottom-0 border-r-2 border-zinc-500 left-[calc(100%+0.5rem)] sm:left-[calc(100%+0.75rem)]"
+                                  />
+                                ) : (
+                                  <span
+                                    aria-hidden
+                                    className="absolute top-0 bottom-1/2 border-r-2 border-zinc-500 left-[calc(100%+0.5rem)] sm:left-[calc(100%+0.75rem)]"
+                                  />
+                                )}
+                              </>
+                            )}
+                          </li>
+                        )
+                      })}
+                  </ul>
                 </div>
-                <ul className="flex flex-col justify-around flex-1 gap-3">
-                  {ms
-                    .slice()
-                    .sort((a, b) => a.slot - b.slot)
-                    .map((m) => (
-                      <li
-                        key={m.id}
-                        className={`rounded border bg-white ${STATUS_CLASS[m.status]}`}
-                      >
-                        <MatchCard match={m} byId={byId} />
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
         {/* Left + right edge fades. White-to-transparent so the user knows
