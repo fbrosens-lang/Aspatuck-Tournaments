@@ -379,40 +379,45 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
 
       {entries.length > 0 && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4">
-          <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
-            <div>
-              <h2 className="font-medium">Seed entries</h2>
-              <p className="text-sm text-[var(--color-muted)] mt-1">
-                Assign seed numbers (1, 2, 3, …) to rank entries before
-                generating the draw. Lower numbers are placed first in the
-                bracket; leave blank for entries you don&apos;t want to seed.
-                {drawExists &&
-                  ' Regenerate the draw above to apply seed changes to bracket positions.'}
-              </p>
-            </div>
-            {/* Single-click toggle: the hidden field carries the value we
-                want to set (the inverse of the current state), so submitting
-                the form flips show_seeds_publicly without a separate Save
-                step. Mirrors the checkbox on /manage; both write the same
-                DB column, so the latest choice shows on either page. */}
-            <form action={setSeedsVisibility} className="shrink-0">
-              <input type="hidden" name="tournament_id" value={id} />
+          <h2 className="font-medium">Seed entries</h2>
+          <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
+            Assign seed numbers (1, 2, 3, …) to rank entries before generating
+            the draw. Lower numbers are placed first in the bracket; leave
+            blank for entries you don&apos;t want to seed.
+            {drawExists &&
+              ' Regenerate the draw above to apply seed changes to bracket positions.'}
+          </p>
+          {/* Same checkbox + description as Manage → Visibility. Both forms
+              write the same DB column, so toggling here is reflected in the
+              Manage checkbox the next time it loads, and vice versa. */}
+          <form
+            action={setSeedsVisibility}
+            className="mb-4 rounded border border-[var(--color-border)] p-3 flex items-start justify-between gap-3 flex-wrap"
+          >
+            <input type="hidden" name="tournament_id" value={id} />
+            <label className="flex items-start gap-2 text-sm">
               <input
-                type="hidden"
+                type="checkbox"
                 name="show_seeds_publicly"
-                value={tournament.show_seeds_publicly ? 'off' : 'on'}
+                defaultChecked={tournament.show_seeds_publicly}
+                className="mt-0.5"
               />
-              <button
-                type="submit"
-                className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50"
-                title="Toggle whether players see seed numbers"
-              >
-                {tournament.show_seeds_publicly
-                  ? 'Hide seeds from players'
-                  : 'Show seeds to players'}
-              </button>
-            </form>
-          </div>
+              <span>
+                Show seed numbers to players
+                <span className="block text-xs text-[var(--color-muted)]">
+                  When unchecked, players see the entries list and bracket
+                  without seed numbers. You can still set and use seeds behind
+                  the scenes.
+                </span>
+              </span>
+            </label>
+            <button
+              type="submit"
+              className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50 shrink-0"
+            >
+              Save
+            </button>
+          </form>
           <form action={saveSeeds} className="space-y-3">
             <input type="hidden" name="tournament_id" value={id} />
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
