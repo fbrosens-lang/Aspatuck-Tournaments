@@ -124,6 +124,34 @@ export async function tdEnterClubMember(formData: FormData) {
   redirect(backUrl(tid, undefined, ok))
 }
 
+export async function tdEnterSoloInDoubles(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const clubMemberId = String(formData.get('club_member_id') ?? '')
+  if (!clubMemberId) {
+    redirect(backUrl(tid, 'Pick a member from the directory list.'))
+  }
+  const supabase = await createClient()
+  const { data: cm } = await supabase
+    .from('club_members')
+    .select('full_name')
+    .eq('id', clubMemberId)
+    .maybeSingle()
+  const { error } = await supabase.rpc('td_enter_solo_member_in_doubles', {
+    p_tournament_id: tid,
+    p_club_member_id: clubMemberId,
+    p_bypass_requirements: true,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  // Solo entries can't be drawn until they're paired with another solo,
+  // so the standard post-draw "drop into a bye slot" banner is misleading.
+  // Use a dedicated ok param that points the TD at the Unpaired pairing
+  // UI below.
+  const name = cm?.full_name ?? 'Player'
+  redirect(backUrl(tid, undefined, `added_solo:${encodeURIComponent(name)}`))
+}
+
 export async function tdEnterTeamFromClubMembers(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const captainId = String(formData.get('captain_club_member_id') ?? '')

@@ -11,6 +11,7 @@ import {
   tdEnterMember,
   tdEnterGuest,
   tdEnterClubMember,
+  tdEnterSoloInDoubles,
   tdEnterTeamFromClubMembers,
   tdPairSoloEntries,
   tdWithdrawEntry,
@@ -157,6 +158,15 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 <>
                   Added <strong>{name}</strong> to the roster. Pick another to
                   add more.
+                </>
+              )
+            }
+            if (ok.startsWith('added_solo:')) {
+              const name = decodeURIComponent(ok.slice('added_solo:'.length))
+              return (
+                <>
+                  Added <strong>{name}</strong> as a solo player. Pair them
+                  with another solo below to confirm the team.
                 </>
               )
             }
@@ -517,6 +527,40 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-2 justify-self-start"
             >
               Enter team
+            </button>
+          </form>
+        </section>
+      )}
+
+      {tournament.kind === 'doubles' && !tournament.solo_only && (
+        <section className="bg-white border border-[var(--color-border)] rounded p-4">
+          <h2 className="font-medium mb-3">Enter a solo player (looking for partner)</h2>
+          <p className="text-sm text-[var(--color-muted)] mb-3">
+            Use this when a player wants in but doesn&apos;t have a partner
+            yet. They&apos;ll show up in the Unpaired players list, where
+            you can pair them with another solo to confirm a team.
+          </p>
+          <form
+            action={tdEnterSoloInDoubles}
+            className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
+          >
+            <input type="hidden" name="tournament_id" value={id} />
+            <label className="block sm:col-span-4">
+              <span className="text-sm">Club member</span>
+              <Combobox
+                name="club_member_id"
+                items={clubMemberItems}
+                required
+                placeholder="Type a name…"
+                ariaLabel="Solo player"
+                submitOnPick
+              />
+            </label>
+            <button
+              type="submit"
+              className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50 sm:col-span-4 justify-self-start"
+            >
+              Enter as solo
             </button>
           </form>
         </section>
