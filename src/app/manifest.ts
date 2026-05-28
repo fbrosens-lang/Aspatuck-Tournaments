@@ -12,7 +12,7 @@ import type { MetadataRoute } from 'next'
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Aspatuck Tournaments',
-    short_name: 'Aspatuck',
+    short_name: 'Aspatuck Tournaments',
     description: 'Tennis tournament signups, draws, and results.',
     start_url: '/',
     display: 'standalone',

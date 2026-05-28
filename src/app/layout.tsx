@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Aspatuck',
+    title: 'Aspatuck Tournaments',
   },
   // Legacy iOS (< 16.4) only recognizes the apple-prefixed alias.
   // Next.js's appleWebApp.capable already emits the modern standard
