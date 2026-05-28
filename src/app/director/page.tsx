@@ -40,6 +40,7 @@ export default async function DirectorDashboardPage() {
   let tournamentQuery = supabase
     .from('tournaments')
     .select('id, name, start_date, end_date, status, kind, draw_status')
+    .order('display_order', { ascending: true, nullsFirst: false })
     .order('start_date', { ascending: false })
   if (role !== 'site_admin') {
     tournamentQuery =

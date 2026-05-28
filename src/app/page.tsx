@@ -141,6 +141,7 @@ export default async function HomePage() {
   const { data: tournaments } = await supabase
     .from('tournaments')
     .select('id, name, start_date, end_date, status')
+    .order('display_order', { ascending: true, nullsFirst: false })
     .order('start_date', { ascending: false })
 
   // Which tournaments is the current user actually registered in? We use this
