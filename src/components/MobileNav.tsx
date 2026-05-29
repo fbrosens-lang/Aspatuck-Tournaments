@@ -99,13 +99,16 @@ export function MobileNav({ children }: MobileNavProps) {
           aria-label="Site navigation"
           className="absolute left-0 right-0 top-full z-20 border-b border-[var(--color-border)] bg-white shadow-sm"
         >
-          {/* onLinkClick closes the drawer when any descendant <Link> or
-              <button> is activated. Cheaper than wrapping each child. */}
+          {/* Closes the drawer on link clicks. Buttons are intentionally
+              excluded: the Log out button submits a <form action={logout}>,
+              and unmounting the form during the click loses the submission
+              on iOS. Form submits redirect, which re-mounts Header and
+              clears the drawer state on their own. */}
           <nav
             className="mx-auto max-w-5xl px-4 py-2 flex flex-col text-sm"
             onClick={(e) => {
               const t = e.target as HTMLElement
-              if (t.closest('a, button')) setOpen(false)
+              if (t.closest('a')) setOpen(false)
             }}
           >
             {children}
