@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
 
-type Props = { searchParams: Promise<{ error?: string }> }
+type Props = { searchParams: Promise<{ error?: string; email?: string }> }
 
 export default async function SignupPage({ searchParams }: Props) {
-  const { error } = await searchParams
+  const { error, email } = await searchParams
   return (
     <div className="max-w-sm mx-auto py-12">
       <h1 className="text-2xl font-semibold mb-6">Sign up</h1>
@@ -31,6 +31,7 @@ export default async function SignupPage({ searchParams }: Props) {
             name="email"
             required
             autoComplete="email"
+            defaultValue={email ?? ''}
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>

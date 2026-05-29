@@ -2,24 +2,72 @@ import Link from 'next/link'
 import { login, requestPasswordReset } from '@/app/auth/actions'
 
 type Props = {
-  searchParams: Promise<{ error?: string; reset_sent?: string }>
+  searchParams: Promise<{
+    error?: string
+    reset_sent?: string
+    email?: string
+    on_roster?: string
+  }>
 }
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { error, reset_sent: resetSent } = await searchParams
+  const { error, reset_sent: resetSent, email, on_roster: onRoster } =
+    await searchParams
+  // Supabase returns "Invalid login credentials" when either the email
+  // has no account or the password is wrong. The login action pairs that
+  // error with on_roster=1|0 so we can show a targeted hint.
+  const isBadCreds = error?.toLowerCase().includes('invalid login credentials')
+  const signupHref = email
+    ? `/auth/signup?email=${encodeURIComponent(email)}`
+    : '/auth/signup'
   return (
     <div className="max-w-sm mx-auto py-12">
       <h1 className="text-2xl font-semibold mb-6">Log in</h1>
       {error && (
-        <p className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
+        <div className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p>{error}</p>
+          {isBadCreds && onRoster === '1' && (
+            <p className="mt-1">
+              Your email is on the club roster but doesn&apos;t have an account
+              yet —{' '}
+              <Link href={signupHref} className="underline font-medium">
+                sign up here
+              </Link>
+              .
+            </p>
+          )}
+          {isBadCreds && onRoster === '0' && (
+            <p className="mt-1">
+              We don&apos;t have this email on the club roster. Your membership
+              may be under a different email — check any past club
+              correspondence, or contact the tournament director to update it.
+            </p>
+          )}
+          {isBadCreds && onRoster === undefined && (
+            <p className="mt-1">
+              If you&apos;ve never logged in before,{' '}
+              <Link href="/auth/signup" className="underline font-medium">
+                sign up here
+              </Link>
+              .
+            </p>
+          )}
+        </div>
       )}
       {resetSent && (
-        <p className="mb-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
-          A password reset link has been sent to <strong>{resetSent}</strong>.
-          Check your inbox (and spam folder).
-        </p>
+        <div className="mb-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
+          <p>
+            A password reset link has been sent to <strong>{resetSent}</strong>.
+            Check your inbox (and spam folder).
+          </p>
+          <p className="mt-1">
+            If you&apos;ve never signed up, the email won&apos;t arrive —{' '}
+            <Link href="/auth/signup" className="underline font-medium">
+              sign up instead
+            </Link>
+            .
+          </p>
+        </div>
       )}
       <form className="space-y-4">
         <label className="block">

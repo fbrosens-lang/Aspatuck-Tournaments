@@ -4,7 +4,12 @@ import { setUserRole } from './actions'
 
 const ROLES = ['player', 'tournament_director', 'site_admin'] as const
 
-export default async function AdminPage() {
+type Props = {
+  searchParams: Promise<{ error?: string; ok?: string }>
+}
+
+export default async function AdminPage({ searchParams }: Props) {
+  const { error, ok } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -42,6 +47,17 @@ export default async function AdminPage() {
           Grant or revoke the tournament director role for any user.
         </p>
       </div>
+
+      {error && (
+        <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+      {ok === 'updated' && (
+        <p className="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+          Role updated.
+        </p>
+      )}
 
       {/* Desktop / tablet: table layout. Hidden on phones where 4
           columns would either overflow or force tiny text. */}

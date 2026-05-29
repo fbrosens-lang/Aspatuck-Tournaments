@@ -12,12 +12,24 @@ async function getSiteOrigin(): Promise<string> {
 }
 
 export async function login(formData: FormData) {
-  const email = String(formData.get('email') ?? '')
+  const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) {
-    redirect(`/auth/login?error=${encodeURIComponent(error.message)}`)
+    const params = new URLSearchParams({ error: error.message })
+    // For credential failures specifically, look up whether the email is on
+    // the club roster so the login page can show a more useful hint:
+    // - On roster: they likely just haven't signed up yet (prefill signup).
+    // - Off roster: their membership may be under a different email.
+    if (error.message.toLowerCase().includes('invalid login credentials') && email) {
+      const { data: onRoster } = await supabase.rpc('signup_allowed_for_email', {
+        p_email: email,
+      })
+      params.set('email', email)
+      params.set('on_roster', onRoster ? '1' : '0')
+    }
+    redirect(`/auth/login?${params.toString()}`)
   }
   redirect('/')
 }
