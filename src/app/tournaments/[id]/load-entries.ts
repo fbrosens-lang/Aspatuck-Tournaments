@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { MyEntryState } from '@/components/RegisterButton'
+import { lastName } from '@/lib/names'
 
 export type EntryRow = {
   id: string
@@ -9,6 +10,15 @@ export type EntryRow = {
   team_id: string | null
   added_by_td_id: string | null
   display: string
+  shortDisplay: string
+}
+
+function shortName(fullName: string): string {
+  const tokens = fullName.trim().split(/\s+/).filter(Boolean)
+  if (tokens.length <= 1) return fullName.trim()
+  const last = lastName(fullName)
+  const initial = tokens[0][0]?.toUpperCase() ?? ''
+  return initial ? `${last} ${initial}.` : last
 }
 
 export async function loadEntriesForTournament(tournamentId: string): Promise<EntryRow[]> {
@@ -51,15 +61,21 @@ export async function loadEntriesForTournament(tournamentId: string): Promise<En
 
   return entries.map((e) => {
     let display = '—'
+    let shortDisplay = '—'
     if (e.participant_id) {
-      display = partById.get(e.participant_id)?.display_name ?? '—'
+      const name = partById.get(e.participant_id)?.display_name ?? '—'
+      display = name
+      shortDisplay = shortName(name)
     } else if (e.team_id) {
       const t = teamById.get(e.team_id)
       const cap = t ? partById.get(t.captain_participant_id)?.display_name ?? '?' : '?'
       const par = t?.partner_participant_id
         ? partById.get(t.partner_participant_id)?.display_name ?? '?'
-        : '(unassigned)'
-      display = `${cap} / ${par}`
+        : null
+      display = `${cap} / ${par ?? '(unassigned)'}`
+      const shortCap = shortName(cap)
+      const shortPar = par ? shortName(par) : '(unassigned)'
+      shortDisplay = `${shortCap} / ${shortPar}`
     }
     return {
       id: e.id,
@@ -69,6 +85,7 @@ export async function loadEntriesForTournament(tournamentId: string): Promise<En
       team_id: e.team_id,
       added_by_td_id: e.added_by_td_id,
       display,
+      shortDisplay,
     }
   })
 }

@@ -5,6 +5,7 @@ import { useRef } from 'react'
 type Entry = {
   id: string
   display: string
+  shortDisplay: string
   seed: number | null
 }
 
@@ -49,7 +50,7 @@ export function Bracket({
   entries,
 }: {
   matches: Match[]
-  entries: { id: string; display: string; seed: number | null }[]
+  entries: { id: string; display: string; shortDisplay: string; seed: number | null }[]
 }) {
   const main = matches.filter((m) => m.bracket === 'main')
 
@@ -238,9 +239,9 @@ function MatchCard({ match, byId }: { match: Match; byId: Map<string, Entry> }) 
   const winA = match.winner_entry_id === match.entry_a_id
   const winB = match.winner_entry_id === match.entry_b_id
   return (
-    <a href={`/matches/${match.id}`} className="block px-3 py-2 text-sm hover:bg-zinc-50">
-      <Row name={a?.display ?? '—'} seed={a?.seed ?? null} winner={!!winA && !!a} />
-      <Row name={b?.display ?? '—'} seed={b?.seed ?? null} winner={!!winB && !!b} />
+    <a href={`/matches/${match.id}`} className="block px-2 sm:px-3 py-2 text-sm hover:bg-zinc-50">
+      <Row name={a?.shortDisplay ?? '—'} seed={a?.seed ?? null} winner={!!winA && !!a} />
+      <Row name={b?.shortDisplay ?? '—'} seed={b?.seed ?? null} winner={!!winB && !!b} />
       {match.status !== 'pending' && match.status !== 'confirmed' && (
         <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] mt-1">
           {match.status}

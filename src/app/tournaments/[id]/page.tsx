@@ -153,75 +153,31 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         </section>
       )}
 
-      <section>
-        <h2 className="text-xl font-medium mb-3">
-          Entries{' '}
-          <span className="text-sm text-[var(--color-muted)] font-normal">
-            ({entries.length})
-          </span>
-        </h2>
-        {displayEntries.length === 0 ? (
-          <div className="rounded border border-dashed border-[var(--color-border)] p-6 text-center text-[var(--color-muted)]">
-            No entries yet.
-          </div>
-        ) : (
-          <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
-            {displayEntries.map((e) => {
-              const isMine = !!myEntryId && e.id === myEntryId
-              return (
-                <li
-                  key={e.id}
-                  className="px-4 py-2 flex items-center justify-between gap-3"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {revealSeeds && (
-                      // Only show a number for entries the TD has explicitly
-                      // seeded. Unseeded entries get a placeholder dash so the
-                      // column stays aligned without implying they have a
-                      // seed — they'll land in random bracket positions.
-                      <span className="text-xs text-[var(--color-muted)] w-6 text-right">
-                        {e.seed ?? '—'}
-                      </span>
-                    )}
-                    <span className="truncate">{e.display}</span>
-                    {isMine && (
-                      <span className="text-xs rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800">
-                        you
-                      </span>
-                    )}
-                    {e.added_by_td_id && (
-                      <span className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)]">
-                        added by TD
-                      </span>
-                    )}
-                    {e.status !== 'confirmed' && (
-                      <span className="text-xs rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
-                        {e.status}
-                      </span>
-                    )}
-                  </div>
-                  {isMine && (
-                    <form action={withdrawSelf}>
-                      <input type="hidden" name="tournament_id" value={id} />
-                      <input type="hidden" name="entry_id" value={e.id} />
-                      <button
-                        type="submit"
-                        className="text-xs text-red-700 hover:underline shrink-0"
-                      >
-                        Withdraw
-                      </button>
-                    </form>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
       {hasDraw && (
         <section>
           <h2 className="text-xl font-medium mb-3">Draw</h2>
+          {revealSeeds && displayEntries.some((e) => e.seed != null) && (
+            <div className="mb-4">
+              <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
+                Seeds
+              </h3>
+              <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
+                {displayEntries
+                  .filter((e) => e.seed != null)
+                  .map((e) => (
+                    <li
+                      key={e.id}
+                      className="px-4 py-2 flex items-center gap-3 min-w-0"
+                    >
+                      <span className="text-xs text-[var(--color-muted)] w-6 text-right">
+                        {e.seed}
+                      </span>
+                      <span className="truncate">{e.display}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
           <Bracket
             matches={matches!.map((m) => ({
               ...m,
@@ -230,6 +186,74 @@ export default async function TournamentPage({ params, searchParams }: Props) {
             }))}
             entries={displayEntries}
           />
+        </section>
+      )}
+
+      {(!hasDraw || td) && (
+        <section>
+          <h2 className="text-xl font-medium mb-3">
+            Entries{' '}
+            <span className="text-sm text-[var(--color-muted)] font-normal">
+              ({entries.length})
+            </span>
+          </h2>
+          {displayEntries.length === 0 ? (
+            <div className="rounded border border-dashed border-[var(--color-border)] p-6 text-center text-[var(--color-muted)]">
+              No entries yet.
+            </div>
+          ) : (
+            <ul className="rounded border border-[var(--color-border)] bg-white divide-y divide-[var(--color-border)]">
+              {displayEntries.map((e) => {
+                const isMine = !!myEntryId && e.id === myEntryId
+                return (
+                  <li
+                    key={e.id}
+                    className="px-4 py-2 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {revealSeeds && (
+                        // Only show a number for entries the TD has explicitly
+                        // seeded. Unseeded entries get a placeholder dash so the
+                        // column stays aligned without implying they have a
+                        // seed — they'll land in random bracket positions.
+                        <span className="text-xs text-[var(--color-muted)] w-6 text-right">
+                          {e.seed ?? '—'}
+                        </span>
+                      )}
+                      <span className="truncate">{e.display}</span>
+                      {isMine && (
+                        <span className="text-xs rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800">
+                          you
+                        </span>
+                      )}
+                      {e.added_by_td_id && (
+                        <span className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)]">
+                          added by TD
+                        </span>
+                      )}
+                      {e.status !== 'confirmed' && (
+                        <span className="text-xs rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
+                          {e.status}
+                        </span>
+                      )}
+                    </div>
+                    {isMine && (
+                      <form action={withdrawSelf}>
+                        <input type="hidden" name="tournament_id" value={id} />
+                        <input type="hidden" name="entry_id" value={e.id} />
+                        <button
+                          type="submit"
+                          className="text-xs text-red-700 hover:underline shrink-0"
+                        >
+                          Withdraw
+                        </button>
+                      </form>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </section>
       )}
     </div>
