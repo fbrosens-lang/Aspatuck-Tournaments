@@ -7,6 +7,7 @@ import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
 import { byLastName, lastName } from '@/lib/names'
 import {
   fillByeSlot,
+  fillByeSlotTeam,
   generateDraw,
   regenerateDraw,
   publishDraw,
@@ -178,57 +179,123 @@ export default async function DrawPage({ params, searchParams }: Props) {
               byeWinner: winnerId ? entryById.get(winnerId)?.display ?? '—' : '—',
             }
           })
-        if (byes.length === 0 || tournament.kind !== 'singles') return null
+        if (byes.length === 0) return null
+        const isDoubles = tournament.kind === 'doubles'
         return (
           <section className="bg-white border border-[var(--color-border)] rounded p-4 space-y-3">
             <div>
-              <h2 className="font-medium">Add player to a bye slot</h2>
+              <h2 className="font-medium">
+                Add {isDoubles ? 'team' : 'player'} to a bye slot
+              </h2>
               <p className="text-sm text-[var(--color-muted)] mt-1">
-                Drops a brand-new player into an existing bye, turning it
-                into a real first-round match. The player who was getting
-                the free pass now has to play to advance. Scores already
-                reported elsewhere are untouched.
+                Drops a brand-new {isDoubles ? 'team' : 'player'} into an
+                existing bye, turning it into a real first-round match. The{' '}
+                {isDoubles ? 'team' : 'player'} that was getting the free pass
+                now has to play to advance. Scores already reported elsewhere
+                are untouched.
+                {isDoubles && (
+                  <>
+                    {' '}
+                    If either partner is already on the roster, withdraw that
+                    entry on the Roster page first — adding the team here
+                    creates a fresh entry.
+                  </>
+                )}
               </p>
             </div>
             <ul className="divide-y divide-[var(--color-border)]">
-              {byes.map((b) => (
-                <li key={b.matchId} className="py-3">
-                  <form
-                    action={fillByeSlot}
-                    className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-3 items-end"
-                  >
-                    <input type="hidden" name="tournament_id" value={id} />
-                    <input type="hidden" name="match_id" value={b.matchId} />
-                    <div className="text-sm">
-                      <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                        Bye slot {b.slot + 1}
-                      </div>
-                      <div className="font-medium">{b.byeWinner}</div>
-                    </div>
-                    <label className="block">
-                      <span className="text-sm">Add player</span>
-                      <select
-                        name="club_member_id"
-                        required
-                        className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-                      >
-                        <option value="">— pick from directory —</option>
-                        {clubMembers?.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.full_name} · {m.email}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      type="submit"
-                      className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 justify-self-start sm:justify-self-auto"
+              {byes.map((b) =>
+                isDoubles ? (
+                  <li key={b.matchId} className="py-3">
+                    <form
+                      action={fillByeSlotTeam}
+                      className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_2fr_auto] gap-3 items-end"
                     >
-                      Fill bye
-                    </button>
-                  </form>
-                </li>
-              ))}
+                      <input type="hidden" name="tournament_id" value={id} />
+                      <input type="hidden" name="match_id" value={b.matchId} />
+                      <div className="text-sm">
+                        <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                          Bye slot {b.slot + 1}
+                        </div>
+                        <div className="font-medium">{b.byeWinner}</div>
+                      </div>
+                      <label className="block">
+                        <span className="text-sm">Captain</span>
+                        <select
+                          name="captain_club_member_id"
+                          required
+                          className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+                        >
+                          <option value="">— pick from directory —</option>
+                          {clubMembers?.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.full_name} · {m.email}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block">
+                        <span className="text-sm">Partner</span>
+                        <select
+                          name="partner_club_member_id"
+                          required
+                          className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+                        >
+                          <option value="">— pick from directory —</option>
+                          {clubMembers?.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.full_name} · {m.email}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="submit"
+                        className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 justify-self-start sm:justify-self-auto"
+                      >
+                        Fill bye
+                      </button>
+                    </form>
+                  </li>
+                ) : (
+                  <li key={b.matchId} className="py-3">
+                    <form
+                      action={fillByeSlot}
+                      className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-3 items-end"
+                    >
+                      <input type="hidden" name="tournament_id" value={id} />
+                      <input type="hidden" name="match_id" value={b.matchId} />
+                      <div className="text-sm">
+                        <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                          Bye slot {b.slot + 1}
+                        </div>
+                        <div className="font-medium">{b.byeWinner}</div>
+                      </div>
+                      <label className="block">
+                        <span className="text-sm">Add player</span>
+                        <select
+                          name="club_member_id"
+                          required
+                          className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+                        >
+                          <option value="">— pick from directory —</option>
+                          {clubMembers?.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.full_name} · {m.email}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="submit"
+                        className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 justify-self-start sm:justify-self-auto"
+                      >
+                        Fill bye
+                      </button>
+                    </form>
+                  </li>
+                ),
+              )}
             </ul>
           </section>
         )

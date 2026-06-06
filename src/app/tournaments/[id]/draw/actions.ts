@@ -118,3 +118,33 @@ export async function fillByeSlot(formData: FormData) {
   revalidatePath(`/tournaments/${tid}/entries`)
   redirect(backUrl(tid, undefined, 'bye_filled'))
 }
+
+/**
+ * Doubles twin of fillByeSlot: drops a brand-new team into a R1 bye slot,
+ * creating the team + entry as part of the same transaction. See the
+ * comment on fillByeSlot for the bracket-unwind semantics.
+ */
+export async function fillByeSlotTeam(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const matchId = String(formData.get('match_id') ?? '')
+  const captainId = String(formData.get('captain_club_member_id') ?? '')
+  const partnerId = String(formData.get('partner_club_member_id') ?? '')
+  if (!matchId || !captainId || !partnerId) {
+    redirect(backUrl(tid, 'Pick both partners and a bye slot.'))
+  }
+  if (captainId === partnerId) {
+    redirect(backUrl(tid, 'Captain and partner must be different.'))
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_add_team_to_bye_slot', {
+    p_tournament_id: tid,
+    p_captain_club_member_id: captainId,
+    p_partner_club_member_id: partnerId,
+    p_match_id: matchId,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/draw`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, 'bye_filled'))
+}
