@@ -88,11 +88,21 @@ export async function tdPairSoloEntries(formData: FormData) {
   if (a === b) {
     redirect(backUrl(tid, 'Pick two different players.'))
   }
+  const hcpRaw = String(formData.get('handicap') ?? '').trim()
+  let handicap: number | null = null
+  if (hcpRaw !== '') {
+    const n = Number(hcpRaw)
+    if (!Number.isInteger(n) || n < 0 || n > 200) {
+      redirect(backUrl(tid, 'Handicap must be an integer between 0 and 200.'))
+    }
+    handicap = n
+  }
   const supabase = await createClient()
   const { error } = await supabase.rpc('td_pair_solo_entries', {
     p_tournament_id: tid,
     p_entry_a_id: a,
     p_entry_b_id: b,
+    p_handicap: handicap,
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)

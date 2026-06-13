@@ -7,6 +7,7 @@ type Entry = {
   display: string
   shortDisplay: string
   seed: number | null
+  handicap: number | null
 }
 
 type Match = {
@@ -50,7 +51,13 @@ export function Bracket({
   entries,
 }: {
   matches: Match[]
-  entries: { id: string; display: string; shortDisplay: string; seed: number | null }[]
+  entries: {
+    id: string
+    display: string
+    shortDisplay: string
+    seed: number | null
+    handicap: number | null
+  }[]
 }) {
   const main = matches.filter((m) => m.bracket === 'main')
 
@@ -240,8 +247,18 @@ function MatchCard({ match, byId }: { match: Match; byId: Map<string, Entry> }) 
   const winB = match.winner_entry_id === match.entry_b_id
   return (
     <a href={`/matches/${match.id}`} className="block px-2 sm:px-3 py-2 text-sm hover:bg-zinc-50">
-      <Row name={a?.shortDisplay ?? '—'} seed={a?.seed ?? null} winner={!!winA && !!a} />
-      <Row name={b?.shortDisplay ?? '—'} seed={b?.seed ?? null} winner={!!winB && !!b} />
+      <Row
+        name={a?.shortDisplay ?? '—'}
+        seed={a?.seed ?? null}
+        handicap={a?.handicap ?? null}
+        winner={!!winA && !!a}
+      />
+      <Row
+        name={b?.shortDisplay ?? '—'}
+        seed={b?.seed ?? null}
+        handicap={b?.handicap ?? null}
+        winner={!!winB && !!b}
+      />
       {match.status !== 'pending' && match.status !== 'confirmed' && (
         <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] mt-1">
           {match.status}
@@ -251,13 +268,26 @@ function MatchCard({ match, byId }: { match: Match; byId: Map<string, Entry> }) 
   )
 }
 
-function Row({ name, seed, winner }: { name: string; seed: number | null; winner: boolean }) {
+function Row({
+  name,
+  seed,
+  handicap,
+  winner,
+}: {
+  name: string
+  seed: number | null
+  handicap: number | null
+  winner: boolean
+}) {
   return (
     <div className={`flex items-center py-0.5 ${winner ? 'font-semibold' : ''}`}>
       <span className="truncate">
         {name}
         {seed != null && (
           <span className="text-[var(--color-muted)] font-normal"> ({seed})</span>
+        )}
+        {handicap != null && (
+          <span className="text-[var(--color-muted)] font-normal"> · HCP {handicap}</span>
         )}
       </span>
     </div>

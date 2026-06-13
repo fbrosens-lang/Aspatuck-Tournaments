@@ -11,6 +11,7 @@ export type EntryRow = {
   added_by_td_id: string | null
   display: string
   shortDisplay: string
+  handicap: number | null
 }
 
 function shortName(fullName: string): string {
@@ -42,7 +43,7 @@ export async function loadEntriesForTournament(tournamentId: string): Promise<En
   const { data: teams } = teamIds.length
     ? await supabase
         .from('teams')
-        .select('id, captain_participant_id, partner_participant_id')
+        .select('id, captain_participant_id, partner_participant_id, handicap')
         .in('id', teamIds)
     : { data: [] }
   for (const t of teams ?? []) {
@@ -62,6 +63,7 @@ export async function loadEntriesForTournament(tournamentId: string): Promise<En
   return entries.map((e) => {
     let display = '—'
     let shortDisplay = '—'
+    let handicap: number | null = null
     if (e.participant_id) {
       const name = partById.get(e.participant_id)?.display_name ?? '—'
       display = name
@@ -76,6 +78,7 @@ export async function loadEntriesForTournament(tournamentId: string): Promise<En
       const shortCap = shortName(cap)
       const shortPar = par ? shortName(par) : '(unassigned)'
       shortDisplay = `${shortCap} / ${shortPar}`
+      handicap = t?.handicap ?? null
     }
     return {
       id: e.id,
@@ -86,6 +89,7 @@ export async function loadEntriesForTournament(tournamentId: string): Promise<En
       added_by_td_id: e.added_by_td_id,
       display,
       shortDisplay,
+      handicap,
     }
   })
 }

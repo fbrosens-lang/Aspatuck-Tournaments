@@ -409,12 +409,12 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
       )}
 
       {/* Unpaired players — solo sign-ups in a doubles tournament that
-          need a partner before the draw is generated. We only show
-          the section for doubles tournaments with at least one
-          unpaired entry. The Combobox for each row offers every OTHER
-          unpaired entry (so the TD can't pick the same player twice). */}
+          need a partner before the draw is generated. Shown for any
+          doubles tournament with at least one unpaired entry, including
+          Calcutta (solo_only) where pairing IS the whole TD job. The
+          Combobox for each row offers every OTHER unpaired entry (so
+          the TD can't pick the same player twice). */}
       {tournament.kind === 'doubles' &&
-        !tournament.solo_only &&
         (() => {
           const unpaired = entries.filter((e) => e.status === 'unpaired')
           if (unpaired.length === 0) return null
@@ -450,7 +450,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                     >
                       <form
                         action={tdPairSoloEntries}
-                        className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-3 items-end"
+                        className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto_auto] gap-3 items-end"
                       >
                         <input type="hidden" name="tournament_id" value={id} />
                         <input type="hidden" name="entry_a_id" value={u.id} />
@@ -472,6 +472,19 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                                 : 'Type a name…'
                             }
                             ariaLabel="Partner to pair with"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="text-sm">Handicap</span>
+                          <input
+                            type="number"
+                            name="handicap"
+                            min={0}
+                            max={200}
+                            step={1}
+                            inputMode="numeric"
+                            aria-label="Team handicap"
+                            className="mt-1 w-20 rounded border border-[var(--color-border)] px-3 py-2"
                           />
                         </label>
                         <button
@@ -662,6 +675,14 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                         positions when the draw is generated. */}
                     <span className="text-xs text-[var(--color-muted)] w-6 text-right">{e.seed ?? '—'}</span>
                     <span className="truncate">{e.display}</span>
+                    {e.handicap != null && (
+                      <span
+                        className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)] shrink-0"
+                        title="Team handicap"
+                      >
+                        HCP {e.handicap}
+                      </span>
+                    )}
                     {e.added_by_td_id && (
                       <span className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)]">
                         added by TD
