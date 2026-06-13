@@ -19,6 +19,7 @@ type Match = {
   entry_b_id: string | null
   winner_entry_id: string | null
   status: 'pending' | 'reported' | 'confirmed' | 'disputed' | 'overridden'
+  score_summary: string | null
 }
 
 const STATUS_CLASS: Record<Match['status'], string> = {
@@ -259,6 +260,11 @@ function MatchCard({ match, byId }: { match: Match; byId: Map<string, Entry> }) 
         handicap={b?.handicap ?? null}
         winner={!!winB && !!b}
       />
+      {match.score_summary && (
+        <p className="text-[11px] text-[var(--color-muted)] mt-1 truncate">
+          {match.score_summary}
+        </p>
+      )}
       {match.status !== 'pending' && match.status !== 'confirmed' && (
         <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] mt-1">
           {match.status}

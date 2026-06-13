@@ -51,6 +51,28 @@ export async function reportScore(formData: FormData) {
   redirect(`/matches/${matchId}?ok=reported`)
 }
 
+export async function tdSimpleScore(formData: FormData) {
+  const matchId = String(formData.get('match_id') ?? '')
+  const winner = String(formData.get('winner_entry_id') ?? '')
+  const summary = String(formData.get('summary') ?? '').trim().slice(0, 200)
+  if (!winner) {
+    redirect(
+      `/matches/${matchId}?error=${encodeURIComponent('Pick a winner.')}`,
+    )
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_simple_score', {
+    p_match_id: matchId,
+    p_winner_entry_id: winner,
+    p_summary: summary,
+  })
+  if (error) {
+    redirect(`/matches/${matchId}?error=${encodeURIComponent(error.message)}`)
+  }
+  revalidatePath(`/matches/${matchId}`)
+  redirect(`/matches/${matchId}?ok=simple_saved`)
+}
+
 export async function overrideScore(formData: FormData) {
   const matchId = String(formData.get('match_id') ?? '')
   const winner = String(formData.get('winner_entry_id') ?? '')

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getSession, isTdOfTournament } from '@/lib/auth'
-import { reportScore, overrideScore } from './actions'
+import { reportScore, overrideScore, tdSimpleScore } from './actions'
 import { withdrawSelf } from '@/app/tournaments/entry-actions'
 
 type Props = {
@@ -26,7 +26,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
   const { data: match } = await supabase
     .from('matches')
     .select(
-      'id, tournament_id, bracket, round, slot, entry_a_id, entry_b_id, winner_entry_id, status, reported_by, reported_at, deadline_override',
+      'id, tournament_id, bracket, round, slot, entry_a_id, entry_b_id, winner_entry_id, status, reported_by, reported_at, deadline_override, score_summary',
     )
     .eq('id', id)
     .maybeSingle()
@@ -177,6 +177,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
         <p className="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
           {ok === 'reported' && 'Score reported. Awaiting opponent confirmation if not yet confirmed.'}
           {ok === 'overridden' && 'Score overridden.'}
+          {ok === 'simple_saved' && 'Winner and score saved.'}
           {ok === 'withdrawn' && 'You have withdrawn from this tournament.'}
         </p>
       )}
@@ -194,6 +195,11 @@ export default async function MatchPage({ params, searchParams }: Props) {
           <div className="mt-3 text-sm text-[var(--color-muted)]">
             Sets:{' '}
             {sets.map((s) => `${s.games_a}-${s.games_b}`).join(', ')}
+          </div>
+        )}
+        {match.score_summary && (
+          <div className="mt-3 text-sm text-[var(--color-muted)]">
+            Score: <span className="text-[var(--color-fg)]">{match.score_summary}</span>
           </div>
         )}
       </section>
@@ -307,6 +313,62 @@ export default async function MatchPage({ params, searchParams }: Props) {
               className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
             >
               {canReport && !td ? 'Submit score' : 'Override'}
+            </button>
+          </form>
+        </section>
+      )}
+
+      {/* TD-only: a free-text "simple score" path for matches whose
+          result doesn't fit the sets table — golf "4&3", a stroke-play
+          score like "75-72", a Calcutta single-set, etc. Skips set
+          validation, marks the match overridden, advances the winner
+          like the regular override. The sets form above is still
+          available; the TD picks whichever is appropriate. */}
+      {td && match.entry_a_id && match.entry_b_id && (
+        <section className="rounded border border-[var(--color-border)] bg-white p-4 space-y-3">
+          <h2 className="font-medium">Simple score (TD)</h2>
+          <p className="text-sm text-[var(--color-muted)]">
+            Use this when the match format doesn&apos;t fit the sets table
+            above (golf match-play, stroke play, a single-set Calcutta,
+            etc.). Pick the winner and write the score however you&apos;d
+            describe it. Submitting marks the match overridden and
+            advances the winner.
+          </p>
+          <form action={tdSimpleScore} className="space-y-3">
+            <input type="hidden" name="match_id" value={match.id} />
+            <label className="block">
+              <span className="text-sm">Score</span>
+              <input
+                type="text"
+                name="summary"
+                maxLength={200}
+                defaultValue={match.score_summary ?? ''}
+                placeholder="e.g. 4&3, 75-72, 6-2"
+                className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm">Winner</span>
+              <select
+                name="winner_entry_id"
+                required
+                defaultValue={match.winner_entry_id ?? ''}
+                className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
+              >
+                <option value="">— pick —</option>
+                {match.entry_a_id && (
+                  <option value={match.entry_a_id}>{aLabel}</option>
+                )}
+                {match.entry_b_id && (
+                  <option value={match.entry_b_id}>{bLabel}</option>
+                )}
+              </select>
+            </label>
+            <button
+              type="submit"
+              className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50"
+            >
+              Save simple score
             </button>
           </form>
         </section>

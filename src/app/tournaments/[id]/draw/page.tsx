@@ -40,7 +40,7 @@ export default async function DrawPage({ params, searchParams }: Props) {
 
   const { data: matches } = await supabase
     .from('matches')
-    .select('id, bracket, round, slot, entry_a_id, entry_b_id, winner_entry_id, status')
+    .select('id, bracket, round, slot, entry_a_id, entry_b_id, winner_entry_id, status, score_summary')
     .eq('tournament_id', id)
     .order('round')
     .order('slot')
