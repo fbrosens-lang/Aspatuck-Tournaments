@@ -175,6 +175,46 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         </p>
       )}
 
+      {/* Calcutta TDs spend most of their time bulk-entering players. We
+          render the directory picker at the very top, autofocused, so
+          they can keep typing names without scrolling or clicking after
+          each submit (the form submitOnPicks → server redirects back →
+          fresh mount refocuses the field). */}
+      {tournament.kind === 'doubles' && tournament.solo_only && (
+        <section className="bg-white border border-[var(--color-border)] rounded p-4">
+          <h2 className="font-medium mb-3">Enter a player from the club directory</h2>
+          <p className="text-sm text-[var(--color-muted)] mb-3">
+            Calcutta players enter solo. They&apos;ll show up in the
+            Unpaired players list further down, where you pair them into
+            teams (and set the team handicap) before generating the draw.
+          </p>
+          <form
+            action={tdEnterSoloInDoubles}
+            className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
+          >
+            <input type="hidden" name="tournament_id" value={id} />
+            <label className="block sm:col-span-4">
+              <span className="text-sm">Club member</span>
+              <Combobox
+                name="club_member_id"
+                items={clubMemberItems}
+                required
+                placeholder="Type a name…"
+                ariaLabel="Solo player"
+                submitOnPick
+                autoFocus
+              />
+            </label>
+            <button
+              type="submit"
+              className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50 sm:col-span-4 justify-self-start"
+            >
+              Enter as solo
+            </button>
+          </form>
+        </section>
+      )}
+
       <section
         className={`rounded border p-4 ${
           drawExists
@@ -547,27 +587,16 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         </section>
       )}
 
-      {tournament.kind === 'doubles' && (
+      {/* Non-Calcutta doubles: "Enter a solo player" stays after the team
+          entry form, because team entry is the primary path. Calcutta
+          renders the solo entry form at the very top instead (see above). */}
+      {tournament.kind === 'doubles' && !tournament.solo_only && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4">
-          <h2 className="font-medium mb-3">
-            {tournament.solo_only
-              ? 'Enter a player from the club directory'
-              : 'Enter a solo player (looking for partner)'}
-          </h2>
+          <h2 className="font-medium mb-3">Enter a solo player (looking for partner)</h2>
           <p className="text-sm text-[var(--color-muted)] mb-3">
-            {tournament.solo_only ? (
-              <>
-                Calcutta players enter solo. They&apos;ll show up in the
-                Unpaired players list, where you pair them into teams (and
-                set the team handicap) before generating the draw.
-              </>
-            ) : (
-              <>
-                Use this when a player wants in but doesn&apos;t have a partner
-                yet. They&apos;ll show up in the Unpaired players list, where
-                you can pair them with another solo to confirm a team.
-              </>
-            )}
+            Use this when a player wants in but doesn&apos;t have a partner
+            yet. They&apos;ll show up in the Unpaired players list, where
+            you can pair them with another solo to confirm a team.
           </p>
           <form
             action={tdEnterSoloInDoubles}

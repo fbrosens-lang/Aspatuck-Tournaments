@@ -45,6 +45,11 @@ type Props = {
    *  where pressing Enter twice — or hunting for the Submit button after a
    *  click — is the most common mistake. */
   submitOnPick?: boolean
+  /** Focus the input on mount. Useful for rapid-entry pages (e.g. the TD
+   *  bulk-adding Calcutta players) where the page reloads after each
+   *  submission and the TD should be able to just start typing the next
+   *  name without clicking the field first. */
+  autoFocus?: boolean
 }
 
 /**
@@ -68,6 +73,7 @@ export function Combobox({
   ariaLabel,
   maxResults = 500,
   submitOnPick = false,
+  autoFocus = false,
 }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
@@ -166,6 +172,7 @@ export function Combobox({
         aria-label={ariaLabel}
         placeholder={placeholder}
         autoComplete="off"
+        autoFocus={autoFocus}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
