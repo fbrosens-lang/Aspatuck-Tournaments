@@ -148,7 +148,7 @@ export function Bracket({
                   ref={(el) => {
                     columnRefs.current.set(round, el)
                   }}
-                  className="snap-start flex flex-col w-[200px] sm:w-[220px] shrink-0"
+                  className="snap-start flex flex-col w-[260px] sm:w-[260px] shrink-0"
                 >
                   <div className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
                     Round {round}
@@ -287,7 +287,7 @@ function Row({
           <span className="text-[var(--color-muted)] font-normal"> ({seed})</span>
         )}
         {handicap != null && (
-          <span className="text-[var(--color-muted)] font-normal"> · HCP {handicap}</span>
+          <span className="text-[var(--color-muted)] font-normal"> ({handicap})</span>
         )}
       </span>
     </div>
