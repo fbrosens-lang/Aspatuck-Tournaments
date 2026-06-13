@@ -526,7 +526,6 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                             min={-40}
                             max={40}
                             step={1}
-                            inputMode="numeric"
                             aria-label="Team handicap"
                             className="mt-1 w-20 rounded border border-[var(--color-border)] px-3 py-2"
                           />
@@ -659,7 +658,6 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                         min={-40}
                         max={40}
                         step={1}
-                        inputMode="numeric"
                         aria-label={`Handicap for ${e.display}`}
                         className="w-20 rounded border border-[var(--color-border)] px-2 py-1 text-sm"
                       />
