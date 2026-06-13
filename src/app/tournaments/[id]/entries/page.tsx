@@ -494,7 +494,11 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                     >
                       <form
                         action={tdPairSoloEntries}
-                        className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto_auto] gap-3 items-end"
+                        className={`grid grid-cols-1 gap-3 items-end ${
+                          tournament.solo_only
+                            ? 'sm:grid-cols-[1fr_2fr_auto_auto]'
+                            : 'sm:grid-cols-[1fr_2fr_auto]'
+                        }`}
                       >
                         <input type="hidden" name="tournament_id" value={id} />
                         <input type="hidden" name="entry_a_id" value={u.id} />
@@ -518,18 +522,20 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                             ariaLabel="Partner to pair with"
                           />
                         </label>
-                        <label className="block">
-                          <span className="text-sm">Handicap</span>
-                          <input
-                            type="number"
-                            name="handicap"
-                            min={-40}
-                            max={40}
-                            step={1}
-                            aria-label="Team handicap"
-                            className="mt-1 w-20 rounded border border-[var(--color-border)] px-3 py-2"
-                          />
-                        </label>
+                        {tournament.solo_only && (
+                          <label className="block">
+                            <span className="text-sm">Handicap</span>
+                            <input
+                              type="number"
+                              name="handicap"
+                              min={-40}
+                              max={40}
+                              step={1}
+                              aria-label="Team handicap"
+                              className="mt-1 w-20 rounded border border-[var(--color-border)] px-3 py-2"
+                            />
+                          </label>
+                        )}
                         <button
                           type="submit"
                           disabled={otherUnpaired.length === 0}
@@ -625,13 +631,15 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         </section>
       )}
 
-      {/* Bulk-edit team handicaps. Pairing already takes a handicap on
-          the same form (migration 0054), but TDs often want to set or
-          fix the values after the fact — especially for Calcuttas where
-          pairing happens first and handicaps come later. We list every
-          confirmed team entry; solo entries don't have a team to attach
-          a handicap to and are skipped. */}
+      {/* Bulk-edit team handicaps. Calcutta-only: the TD's RPC rejects
+          handicap writes on non-solo_only tournaments, and the column
+          is meaningless outside Calcutta. Pairing already takes a
+          handicap inline (migration 0054), but TDs often want to set or
+          fix the values after the fact. We list every confirmed team
+          entry; solo entries don't have a team to attach a handicap to
+          and are skipped. */}
       {tournament.kind === 'doubles' &&
+        tournament.solo_only &&
         (() => {
           const teamEntries = entries.filter(
             (e) => e.team_id != null && e.status === 'confirmed',
@@ -772,7 +780,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                         positions when the draw is generated. */}
                     <span className="text-xs text-[var(--color-muted)] w-6 text-right">{e.seed ?? '—'}</span>
                     <span className="truncate">{e.display}</span>
-                    {e.handicap != null && (
+                    {tournament.solo_only && e.handicap != null && (
                       <span
                         className="text-xs rounded bg-zinc-100 px-1.5 py-0.5 text-[var(--color-muted)] shrink-0"
                         title="Team handicap"

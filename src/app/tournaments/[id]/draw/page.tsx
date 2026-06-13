@@ -31,7 +31,7 @@ export default async function DrawPage({ params, searchParams }: Props) {
   const supabase = await createClient()
   const { data: tournament } = await supabase
     .from('tournaments')
-    .select('id, name, draw_status, kind')
+    .select('id, name, draw_status, kind, solo_only')
     .eq('id', id)
     .maybeSingle()
   if (!tournament) notFound()
@@ -152,7 +152,11 @@ export default async function DrawPage({ params, searchParams }: Props) {
               status: m.status as 'pending' | 'reported' | 'confirmed' | 'disputed' | 'overridden',
               bracket: m.bracket as 'main' | 'consolation',
             }))}
-            entries={entries}
+            entries={
+              tournament.solo_only
+                ? entries
+                : entries.map((e) => ({ ...e, handicap: null }))
+            }
           />
         </section>
       )}

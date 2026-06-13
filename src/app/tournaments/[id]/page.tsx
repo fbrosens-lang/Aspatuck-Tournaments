@@ -65,10 +65,14 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     myState.kind === 'singles' || myState.kind === 'team' ? myState.entryId : null
 
   // TDs always see seed numbers; players see them only if the TD opted in.
+  // Handicaps are a Calcutta-only concept — null them out for everyone
+  // else so non-Calcutta brackets stay clean.
   const revealSeeds = td || tournament.show_seeds_publicly
-  const displayEntries = revealSeeds
-    ? entries
-    : entries.map((e) => ({ ...e, seed: null }))
+  const displayEntries = entries.map((e) => ({
+    ...e,
+    seed: revealSeeds ? e.seed : null,
+    handicap: tournament.solo_only ? e.handicap : null,
+  }))
 
   // Doubles partner picker: load club directory entries (NOT signed-up
   // profiles), so a captain can pick a partner who hasn't created an account
