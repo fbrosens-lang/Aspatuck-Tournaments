@@ -92,8 +92,8 @@ export async function tdPairSoloEntries(formData: FormData) {
   let handicap: number | null = null
   if (hcpRaw !== '') {
     const n = Number(hcpRaw)
-    if (!Number.isInteger(n) || n < 0 || n > 200) {
-      redirect(backUrl(tid, 'Handicap must be an integer between 0 and 200.'))
+    if (!Number.isInteger(n) || n < -50 || n > 200) {
+      redirect(backUrl(tid, 'Handicap must be an integer between -50 and 200.'))
     }
     handicap = n
   }
@@ -367,8 +367,8 @@ export async function saveTeamHandicaps(formData: FormData) {
       continue
     }
     const n = Number(raw)
-    if (!Number.isInteger(n) || n < 0 || n > 200) {
-      redirect(backUrl(tid, `handicap "${raw}" must be an integer between 0 and 200`))
+    if (!Number.isInteger(n) || n < -50 || n > 200) {
+      redirect(backUrl(tid, `handicap "${raw}" must be an integer between -50 and 200`))
     }
     handicaps.push({ team_id: teamId, handicap: n })
   }
