@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
 import {
   saveSeeds,
+  saveTeamHandicaps,
   tdAcceptTeamInvite,
   tdAddAndEnterGuest,
   tdClearSeeds,
@@ -146,6 +147,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             if (ok === 'paired')
               return 'Players paired. The two solo entries are now one confirmed team.'
             if (ok === 'seeded') return 'Seeds saved.'
+            if (ok === 'handicaps_saved') return 'Team handicaps saved.'
             if (ok === 'seeds_cleared')
               return 'All seeds cleared. Add fresh seed numbers and regenerate the draw when ready.'
             if (ok === 'seeds_shown')
@@ -623,6 +625,57 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
           </form>
         </section>
       )}
+
+      {/* Bulk-edit team handicaps. Pairing already takes a handicap on
+          the same form (migration 0054), but TDs often want to set or
+          fix the values after the fact — especially for Calcuttas where
+          pairing happens first and handicaps come later. We list every
+          confirmed team entry; solo entries don't have a team to attach
+          a handicap to and are skipped. */}
+      {tournament.kind === 'doubles' &&
+        (() => {
+          const teamEntries = entries.filter(
+            (e) => e.team_id != null && e.status === 'confirmed',
+          )
+          if (teamEntries.length === 0) return null
+          return (
+            <section className="bg-white border border-[var(--color-border)] rounded p-4">
+              <h2 className="font-medium">Team handicaps</h2>
+              <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
+                Whole numbers, 0–200. Leave blank to clear a handicap.
+                Saved handicaps appear as an <code>HCP N</code> chip on
+                this page and on each team&apos;s bracket card.
+              </p>
+              <form action={saveTeamHandicaps} className="space-y-3">
+                <input type="hidden" name="tournament_id" value={id} />
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                  {teamEntries.map((e) => (
+                    <li key={e.id} className="flex items-center gap-2 py-1">
+                      <input
+                        type="number"
+                        name={`hcp_${e.team_id}`}
+                        defaultValue={e.handicap ?? ''}
+                        min={0}
+                        max={200}
+                        step={1}
+                        inputMode="numeric"
+                        aria-label={`Handicap for ${e.display}`}
+                        className="w-20 rounded border border-[var(--color-border)] px-2 py-1 text-sm"
+                      />
+                      <span className="text-sm truncate">{e.display}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="submit"
+                  className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+                >
+                  Save handicaps
+                </button>
+              </form>
+            </section>
+          )
+        })()}
 
       {entries.length > 0 && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4">

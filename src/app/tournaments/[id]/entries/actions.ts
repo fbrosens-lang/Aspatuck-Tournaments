@@ -355,6 +355,35 @@ export async function saveSeeds(formData: FormData) {
   redirect(backUrl(tid, undefined, 'seeded'))
 }
 
+export async function saveTeamHandicaps(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const handicaps: { team_id: string; handicap: number | null }[] = []
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith('hcp_')) continue
+    const teamId = key.slice('hcp_'.length)
+    const raw = String(value).trim()
+    if (raw === '') {
+      handicaps.push({ team_id: teamId, handicap: null })
+      continue
+    }
+    const n = Number(raw)
+    if (!Number.isInteger(n) || n < 0 || n > 200) {
+      redirect(backUrl(tid, `handicap "${raw}" must be an integer between 0 and 200`))
+    }
+    handicaps.push({ team_id: teamId, handicap: n })
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_set_team_handicaps', {
+    p_tournament_id: tid,
+    p_handicaps: handicaps,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  revalidatePath(`/tournaments/${tid}/draw`)
+  redirect(backUrl(tid, undefined, 'handicaps_saved'))
+}
+
 export async function tdClearSeeds(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const supabase = await createClient()
