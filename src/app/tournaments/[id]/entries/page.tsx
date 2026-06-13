@@ -256,12 +256,14 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         </div>
       </section>
 
-      {/* Individual-entry TD forms. These create solo entries — for singles
-          tournaments (always) and for Calcutta-style doubles where teams
-          are formed by hat draw later. Normal doubles uses the "Enter a
-          doubles team" section below instead. */}
-      {(tournament.kind === 'singles' ||
-        (tournament.kind === 'doubles' && tournament.solo_only)) && (
+      {/* Singles-only entry forms. These call RPCs that hard-require
+          kind='singles' (td_enter_club_member, td_enter_member,
+          td_add_guest_participant + td_enter_guest), so we can't reuse
+          them for solo_only Calcutta doubles — that flavor has its own
+          "Enter a solo player from the directory" section further down
+          which uses td_enter_solo_member_in_doubles and produces the
+          'unpaired' entries the pairing UI needs. */}
+      {tournament.kind === 'singles' && (
         <>
           <section className="bg-white border border-[var(--color-border)] rounded p-4">
             <h2 className="font-medium mb-3">Enter from the club directory</h2>
@@ -545,13 +547,27 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
         </section>
       )}
 
-      {tournament.kind === 'doubles' && !tournament.solo_only && (
+      {tournament.kind === 'doubles' && (
         <section className="bg-white border border-[var(--color-border)] rounded p-4">
-          <h2 className="font-medium mb-3">Enter a solo player (looking for partner)</h2>
+          <h2 className="font-medium mb-3">
+            {tournament.solo_only
+              ? 'Enter a player from the club directory'
+              : 'Enter a solo player (looking for partner)'}
+          </h2>
           <p className="text-sm text-[var(--color-muted)] mb-3">
-            Use this when a player wants in but doesn&apos;t have a partner
-            yet. They&apos;ll show up in the Unpaired players list, where
-            you can pair them with another solo to confirm a team.
+            {tournament.solo_only ? (
+              <>
+                Calcutta players enter solo. They&apos;ll show up in the
+                Unpaired players list, where you pair them into teams (and
+                set the team handicap) before generating the draw.
+              </>
+            ) : (
+              <>
+                Use this when a player wants in but doesn&apos;t have a partner
+                yet. They&apos;ll show up in the Unpaired players list, where
+                you can pair them with another solo to confirm a team.
+              </>
+            )}
           </p>
           <form
             action={tdEnterSoloInDoubles}
