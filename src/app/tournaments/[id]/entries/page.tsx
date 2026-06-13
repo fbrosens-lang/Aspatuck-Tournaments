@@ -523,8 +523,8 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                           <input
                             type="number"
                             name="handicap"
-                            min={-20}
-                            max={20}
+                            min={-40}
+                            max={40}
                             step={1}
                             inputMode="numeric"
                             aria-label="Team handicap"
@@ -642,7 +642,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
             <section className="bg-white border border-[var(--color-border)] rounded p-4">
               <h2 className="font-medium">Team handicaps</h2>
               <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
-                Whole numbers from -20 to 20 (negative for plus
+                Whole numbers from -40 to 40 (negative for plus
                 handicaps). Leave blank to clear a handicap.
                 Saved handicaps appear as an <code>HCP N</code> chip on
                 this page and on each team&apos;s bracket card.
@@ -656,8 +656,8 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                         type="number"
                         name={`hcp_${e.team_id}`}
                         defaultValue={e.handicap ?? ''}
-                        min={-20}
-                        max={20}
+                        min={-40}
+                        max={40}
                         step={1}
                         inputMode="numeric"
                         aria-label={`Handicap for ${e.display}`}
