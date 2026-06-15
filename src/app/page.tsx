@@ -193,6 +193,9 @@ export default async function HomePage() {
   const overdueMatches = (myMatches ?? []).filter(
     (m) => m.deadline != null && new Date(m.deadline).getTime() < now,
   )
+  const tdOverdueMatches = (tdMatches ?? []).filter(
+    (m) => m.deadline != null && new Date(m.deadline).getTime() < now,
+  )
 
   return (
     <div className="space-y-8">
@@ -233,6 +236,52 @@ export default async function HomePage() {
                     </div>
                     <span className="text-sm text-red-700 hover:underline">
                       Enter result →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {tdOverdueMatches.length > 0 && (
+        <section>
+          <div className="rounded border border-red-300 bg-red-50 p-4 space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold text-red-800">
+                Overdue matches in your tournaments ({tdOverdueMatches.length})
+              </h2>
+              <p className="text-sm text-red-700">
+                These haven&apos;t been scored and are past their deadline.
+              </p>
+            </div>
+            <ul className="space-y-2">
+              {tdOverdueMatches.map((m) => (
+                <li
+                  key={m.match_id}
+                  className="rounded border border-red-300 bg-white"
+                >
+                  <Link
+                    href={`/matches/${m.match_id}`}
+                    className="flex items-center justify-between p-3 hover:bg-red-50"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {m.side_a_label} vs {m.side_b_label}
+                        <span
+                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${TD_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                        >
+                          {TD_STATUS_LABEL[m.match_status] ?? m.match_status}
+                        </span>
+                      </p>
+                      <p className="text-xs text-red-700 mt-0.5">
+                        {m.tournament_name} · Round {m.round} · due{' '}
+                        {new Date(m.deadline!).toLocaleString()}
+                      </p>
+                    </div>
+                    <span className="text-sm text-red-700 hover:underline">
+                      Enter / override →
                     </span>
                   </Link>
                 </li>
