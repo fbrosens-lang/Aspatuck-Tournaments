@@ -189,8 +189,59 @@ export default async function HomePage() {
     }
   }
 
+  const now = Date.now()
+  const overdueMatches = (myMatches ?? []).filter(
+    (m) => m.deadline != null && new Date(m.deadline).getTime() < now,
+  )
+
   return (
     <div className="space-y-8">
+      {overdueMatches.length > 0 && (
+        <section>
+          <div className="rounded border border-red-300 bg-red-50 p-4 space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold text-red-800">
+                Overdue matches ({overdueMatches.length})
+              </h2>
+              <p className="text-sm text-red-700">
+                These need a score recorded — they were due before now.
+              </p>
+            </div>
+            <ul className="space-y-2">
+              {overdueMatches.map((m) => (
+                <li
+                  key={m.match_id}
+                  className="rounded border border-red-300 bg-white"
+                >
+                  <Link
+                    href={`/matches/${m.match_id}`}
+                    className="flex items-center justify-between p-3 hover:bg-red-50"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        vs {m.opponent_label}
+                        <span
+                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${PLAYER_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                        >
+                          {PLAYER_STATUS_LABEL[m.match_status] ?? m.match_status}
+                        </span>
+                      </p>
+                      <p className="text-xs text-red-700 mt-0.5">
+                        {m.tournament_name} · Round {m.round} · due{' '}
+                        {new Date(m.deadline!).toLocaleString()}
+                      </p>
+                    </div>
+                    <span className="text-sm text-red-700 hover:underline">
+                      Enter result →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
       {pendingInvites.length > 0 && (
         <section>
           <h2 className="text-xl font-medium mb-3">Doubles invitations</h2>
