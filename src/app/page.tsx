@@ -454,7 +454,11 @@ export default async function HomePage() {
 
       {userId && (
         <section>
-          <h2 className="text-xl font-medium mb-3">Your matches</h2>
+          <h2 className="text-xl font-medium">Your matches</h2>
+          <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
+            Each match must be completed by the deadline shown. Overdue matches
+            appear at the top in red.
+          </p>
           {!myMatches || myMatches.length === 0 ? (
             <div className="rounded border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-muted)]">
               No matches awaiting a score from you right now.
