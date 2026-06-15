@@ -38,12 +38,17 @@ export async function createTournament(formData: FormData) {
   redirect(`/tournaments/${data}/manage`)
 }
 
-export async function setRoundDeadline(formData: FormData) {
+export type DeadlineResult = { ok: boolean; message: string; ts: number }
+
+export async function setRoundDeadline(
+  _prev: DeadlineResult | undefined,
+  formData: FormData,
+): Promise<DeadlineResult> {
   const id = str(formData.get('tournament_id'))
   const round = Number(formData.get('round'))
   const deadline = nullableTimestamp(formData.get('deadline'))
   if (!id || !Number.isFinite(round)) {
-    redirect(`/tournaments/${id}/manage?error=Invalid+round`)
+    return { ok: false, message: 'Invalid round', ts: Date.now() }
   }
   const supabase = await createClient()
   const { error } = await supabase.rpc('td_set_round_deadline', {
@@ -52,11 +57,16 @@ export async function setRoundDeadline(formData: FormData) {
     p_deadline: deadline,
   })
   if (error) {
-    redirect(`/tournaments/${id}/manage?error=${encodeURIComponent(error.message)}`)
+    return { ok: false, message: error.message, ts: Date.now() }
   }
   revalidatePath(`/tournaments/${id}/manage`)
   revalidatePath(`/tournaments/${id}`)
-  redirect(`/tournaments/${id}/manage?ok=deadline`)
+  revalidatePath(`/tournaments/${id}/draw`)
+  return {
+    ok: true,
+    message: deadline ? 'Saved' : 'Cleared',
+    ts: Date.now(),
+  }
 }
 
 export async function grantTd(formData: FormData) {

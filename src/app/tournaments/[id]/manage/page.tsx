@@ -4,11 +4,11 @@ import { getSession, isTdOfTournament } from '@/lib/auth'
 import {
   grantTd,
   revokeTd,
-  setRoundDeadline,
   updateTournament,
 } from '@/app/tournaments/actions'
 import { TournamentRulesFields } from '@/components/TournamentRulesFields'
 import { SeedVisibilityToggle } from '@/components/SeedVisibilityToggle'
+import { RoundDeadlineRow } from './RoundDeadlineRow'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -213,33 +213,11 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
                 key={r}
                 className="rounded border border-[var(--color-border)] bg-white p-3"
               >
-                <form
-                  action={setRoundDeadline}
-                  className="flex items-end gap-3 flex-wrap"
-                >
-                  <input type="hidden" name="tournament_id" value={t.id} />
-                  <input type="hidden" name="round" value={r} />
-                  <div className="text-sm font-medium pb-2">Round {r}</div>
-                  <label className="block flex-1 min-w-[200px]">
-                    <span className="text-xs text-[var(--color-muted)]">
-                      Deadline
-                    </span>
-                    <input
-                      type="datetime-local"
-                      name="deadline"
-                      defaultValue={toLocalInput(
-                        deadlineByRound.get(r) ?? null,
-                      )}
-                      className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="rounded bg-[var(--color-accent)] text-white px-3 py-2 text-sm hover:opacity-90"
-                  >
-                    Save
-                  </button>
-                </form>
+                <RoundDeadlineRow
+                  tournamentId={t.id}
+                  round={r}
+                  defaultValue={toLocalInput(deadlineByRound.get(r) ?? null)}
+                />
               </li>
             ))}
           </ul>
