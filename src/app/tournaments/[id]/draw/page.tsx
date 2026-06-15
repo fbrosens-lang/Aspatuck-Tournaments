@@ -45,6 +45,14 @@ export default async function DrawPage({ params, searchParams }: Props) {
     .order('round')
     .order('slot')
 
+  const { data: roundDeadlineRows } = await supabase
+    .from('tournament_round_deadlines')
+    .select('round, deadline')
+    .eq('tournament_id', id)
+  const deadlineByRound = new Map<number, string>(
+    (roundDeadlineRows ?? []).map((r) => [r.round as number, r.deadline as string]),
+  )
+
   const { data: rawParticipants } = await supabase
     .from('participants')
     .select('id, display_name, kind')
@@ -157,6 +165,7 @@ export default async function DrawPage({ params, searchParams }: Props) {
                 ? entries
                 : entries.map((e) => ({ ...e, handicap: null }))
             }
+            deadlineByRound={deadlineByRound}
           />
         </section>
       )}

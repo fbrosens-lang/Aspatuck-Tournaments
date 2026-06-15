@@ -47,9 +47,18 @@ function shortRoundLabel(round: number, totalRounds: number): string {
   return `R${round}`
 }
 
+function roundLabel(round: number, totalRounds: number): string {
+  const fromEnd = totalRounds - round
+  if (fromEnd === 0) return 'Finals'
+  if (fromEnd === 1) return 'Semis'
+  if (fromEnd === 2) return 'Quarters'
+  return `Round ${round}`
+}
+
 export function Bracket({
   matches,
   entries,
+  deadlineByRound,
 }: {
   matches: Match[]
   entries: {
@@ -59,6 +68,7 @@ export function Bracket({
     seed: number | null
     handicap: number | null
   }[]
+  deadlineByRound?: Map<number, string>
 }) {
   const main = matches.filter((m) => m.bracket === 'main')
 
@@ -151,8 +161,18 @@ export function Bracket({
                   }}
                   className="snap-start flex flex-col w-[260px] sm:w-[260px] shrink-0"
                 >
-                  <div className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
-                    Round {round}
+                  <div className="mb-2">
+                    <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                      {roundLabel(round, totalRounds)}
+                    </div>
+                    {deadlineByRound?.get(round) && (
+                      <div className="text-[11px] text-[var(--color-muted)] mt-0.5">
+                        Due {new Date(deadlineByRound.get(round)!).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </div>
+                    )}
                   </div>
                   <ul className="flex flex-col flex-1">
                     {ms
