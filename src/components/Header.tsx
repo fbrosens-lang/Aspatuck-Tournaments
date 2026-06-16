@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/auth/actions'
 import { MobileNav } from '@/components/MobileNav'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export async function Header() {
   const supabase = await createClient()
@@ -59,12 +60,13 @@ export async function Header() {
         Profile
       </Link>
       <form action={logout}>
-        <button
-          type="submit"
+        <SubmitButton
+          variant="plain"
           className="min-h-11 sm:min-h-0 inline-flex items-center py-2 sm:py-0 hover:underline cursor-pointer"
+          pendingLabel="Logging out…"
         >
           Log out
-        </button>
+        </SubmitButton>
       </form>
     </>
   ) : (

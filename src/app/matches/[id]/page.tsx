@@ -2,8 +2,15 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getSession, isTdOfTournament } from '@/lib/auth'
-import { reportScore, overrideScore, tdSimpleScore } from './actions'
+import {
+  reportScore,
+  overrideScore,
+  tdSimpleScore,
+  tdClearMatchResult,
+} from './actions'
+import { formatSetsScore } from '@/lib/format-sets'
 import { withdrawSelf } from '@/app/tournaments/entry-actions'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -179,6 +186,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
           {ok === 'overridden' && 'Score overridden.'}
           {ok === 'simple_saved' && 'Winner and score saved.'}
           {ok === 'withdrawn' && 'You have withdrawn from this tournament.'}
+          {ok === 'cleared' && 'Match result cleared. The match is back to pending.'}
         </p>
       )}
 
@@ -193,8 +201,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
         />
         {sets && sets.length > 0 && (
           <div className="mt-3 text-sm text-[var(--color-muted)]">
-            Sets:{' '}
-            {sets.map((s) => `${s.games_a}-${s.games_b}`).join(', ')}
+            Sets: {formatSetsScore(sets)}
           </div>
         )}
         {match.score_summary && (
@@ -214,12 +221,13 @@ export default async function MatchPage({ params, searchParams }: Props) {
           <form action={withdrawSelf}>
             <input type="hidden" name="tournament_id" value={tournament.id} />
             <input type="hidden" name="entry_id" value={myEntryId} />
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded border border-red-300 text-red-700 px-3 py-1.5 text-sm hover:bg-red-50"
+              pendingLabel="Withdrawing…"
             >
               Withdraw
-            </button>
+            </SubmitButton>
           </form>
         </section>
       )}
@@ -240,8 +248,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
                   <th className="text-left font-medium pb-1">Set</th>
                   <th className="text-left font-medium pb-1">{aLabel}</th>
                   <th className="text-left font-medium pb-1">{bLabel}</th>
-                  <th className="text-left font-medium pb-1">TB A</th>
-                  <th className="text-left font-medium pb-1">TB B</th>
+                  <th className="text-left font-medium pb-1">Tie Break score</th>
                 </tr>
               </thead>
               <tbody>
@@ -270,20 +277,17 @@ export default async function MatchPage({ params, searchParams }: Props) {
                       </td>
                       <td className="py-1 pr-2">
                         <input
-                          type="number"
-                          name={`set_${n}_ta`}
-                          min={0}
-                          defaultValue={existing?.tiebreak_a ?? ''}
-                          className="w-16 rounded border border-[var(--color-border)] px-2 py-1"
-                        />
-                      </td>
-                      <td className="py-1 pr-2">
-                        <input
-                          type="number"
-                          name={`set_${n}_tb`}
-                          min={0}
-                          defaultValue={existing?.tiebreak_b ?? ''}
-                          className="w-16 rounded border border-[var(--color-border)] px-2 py-1"
+                          type="text"
+                          name={`set_${n}_tb_score`}
+                          inputMode="numeric"
+                          placeholder="e.g. 7-3"
+                          pattern="\d+\s*[-–]\s*\d+"
+                          defaultValue={
+                            existing?.tiebreak_a != null && existing?.tiebreak_b != null
+                              ? `${existing.tiebreak_a}-${existing.tiebreak_b}`
+                              : ''
+                          }
+                          className="w-28 rounded border border-[var(--color-border)] px-2 py-1"
                         />
                       </td>
                     </tr>
@@ -308,13 +312,27 @@ export default async function MatchPage({ params, searchParams }: Props) {
                 )}
               </select>
             </label>
-            <button
-              type="submit"
-              className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-            >
+            <SubmitButton variant="primary" pendingLabel="Submitting…">
               {canReport && !td ? 'Submit score' : 'Override'}
-            </button>
+            </SubmitButton>
           </form>
+          {td && match.status !== 'pending' && (
+            <form action={tdClearMatchResult} className="border-t border-[var(--color-border)] pt-3 space-y-2">
+              <input type="hidden" name="match_id" value={match.id} />
+              <SubmitButton
+                variant="plain"
+                className="rounded border border-red-300 text-red-700 px-3 py-1.5 text-sm hover:bg-red-50"
+                pendingLabel="Clearing…"
+              >
+                Clear result
+              </SubmitButton>
+              <p className="text-xs text-[var(--color-muted)]">
+                Returns this match to pending and removes the winner from the
+                next round. If the next match has already been played, clear
+                that one first.
+              </p>
+            </form>
+          )}
         </section>
       )}
 
@@ -364,12 +382,13 @@ export default async function MatchPage({ params, searchParams }: Props) {
                 )}
               </select>
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50"
+              pendingLabel="Saving…"
             >
               Save simple score
-            </button>
+            </SubmitButton>
           </form>
         </section>
       )}

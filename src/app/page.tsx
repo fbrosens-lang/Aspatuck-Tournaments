@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth'
 import { formatDateLong } from '@/lib/dates'
 import { acceptInvite, declineInvite } from '@/app/tournaments/entry-actions'
+import { LinkPending } from '@/components/LinkPending'
+import { SubmitButton } from '@/components/SubmitButton'
 
 const PLAYER_STATUS_BADGE: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-800',
@@ -220,23 +222,25 @@ export default async function HomePage() {
                     href={`/matches/${m.match_id}`}
                     className="flex items-center justify-between p-3 hover:bg-red-50"
                   >
-                    <div>
-                      <p className="font-medium">
-                        vs {m.opponent_label}
-                        <span
-                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${PLAYER_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
-                        >
-                          {PLAYER_STATUS_LABEL[m.match_status] ?? m.match_status}
-                        </span>
-                      </p>
-                      <p className="text-xs text-red-700 mt-0.5">
-                        {m.tournament_name} · Round {m.round} · due{' '}
-                        {new Date(m.deadline!).toLocaleString()}
-                      </p>
-                    </div>
-                    <span className="text-sm text-red-700 hover:underline">
-                      Enter result →
-                    </span>
+                    <LinkPending>
+                      <div>
+                        <p className="font-medium">
+                          vs {m.opponent_label}
+                          <span
+                            className={`ml-2 text-xs rounded px-1.5 py-0.5 ${PLAYER_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                          >
+                            {PLAYER_STATUS_LABEL[m.match_status] ?? m.match_status}
+                          </span>
+                        </p>
+                        <p className="text-xs text-red-700 mt-0.5">
+                          {m.tournament_name} · Round {m.round} · due{' '}
+                          {new Date(m.deadline!).toLocaleString()}
+                        </p>
+                      </div>
+                      <span className="text-sm text-red-700 hover:underline">
+                        Enter result →
+                      </span>
+                    </LinkPending>
                   </Link>
                 </li>
               ))}
@@ -266,23 +270,25 @@ export default async function HomePage() {
                     href={`/matches/${m.match_id}`}
                     className="flex items-center justify-between p-3 hover:bg-red-50"
                   >
-                    <div>
-                      <p className="font-medium">
-                        {m.side_a_label} vs {m.side_b_label}
-                        <span
-                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${TD_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
-                        >
-                          {TD_STATUS_LABEL[m.match_status] ?? m.match_status}
-                        </span>
-                      </p>
-                      <p className="text-xs text-red-700 mt-0.5">
-                        {m.tournament_name} · Round {m.round} · due{' '}
-                        {new Date(m.deadline!).toLocaleString()}
-                      </p>
-                    </div>
-                    <span className="text-sm text-red-700 hover:underline">
-                      Enter / override →
-                    </span>
+                    <LinkPending>
+                      <div>
+                        <p className="font-medium">
+                          {m.side_a_label} vs {m.side_b_label}
+                          <span
+                            className={`ml-2 text-xs rounded px-1.5 py-0.5 ${TD_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                          >
+                            {TD_STATUS_LABEL[m.match_status] ?? m.match_status}
+                          </span>
+                        </p>
+                        <p className="text-xs text-red-700 mt-0.5">
+                          {m.tournament_name} · Round {m.round} · due{' '}
+                          {new Date(m.deadline!).toLocaleString()}
+                        </p>
+                      </div>
+                      <span className="text-sm text-red-700 hover:underline">
+                        Enter / override →
+                      </span>
+                    </LinkPending>
                   </Link>
                 </li>
               ))}
@@ -321,12 +327,13 @@ export default async function HomePage() {
                       value={inv.tournament_id}
                     />
                     <input type="hidden" name="team_id" value={inv.team_id} />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      variant="plain"
                       className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
+                      pendingLabel="Accepting…"
                     >
                       Accept
-                    </button>
+                    </SubmitButton>
                   </form>
                   <form action={declineInvite}>
                     <input
@@ -335,12 +342,13 @@ export default async function HomePage() {
                       value={inv.tournament_id}
                     />
                     <input type="hidden" name="team_id" value={inv.team_id} />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      variant="plain"
                       className="rounded border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-white"
+                      pendingLabel="Declining…"
                     >
                       Decline
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               </li>
@@ -374,25 +382,27 @@ export default async function HomePage() {
                       href={`/tournaments/${t.id}`}
                       className="block p-4 hover:bg-zinc-50"
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <h2 className="text-lg font-medium flex items-center gap-2 flex-wrap">
-                            <span>{t.name}</span>
-                            {isRegistered && (
-                              <span className="text-xs rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800 font-normal">
-                                Registered
-                              </span>
-                            )}
-                          </h2>
-                          <p className="text-sm text-[var(--color-muted)]">
-                            Runs from {formatDateLong(t.start_date)} to{' '}
-                            {formatDateLong(t.end_date)}
-                          </p>
+                      <LinkPending>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <h2 className="text-lg font-medium flex items-center gap-2 flex-wrap">
+                              <span>{t.name}</span>
+                              {isRegistered && (
+                                <span className="text-xs rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800 font-normal">
+                                  Registered
+                                </span>
+                              )}
+                            </h2>
+                            <p className="text-sm text-[var(--color-muted)]">
+                              Runs from {formatDateLong(t.start_date)} to{' '}
+                              {formatDateLong(t.end_date)}
+                            </p>
+                          </div>
+                          <span className="text-xs uppercase tracking-wide text-[var(--color-muted)] shrink-0">
+                            {t.status}
+                          </span>
                         </div>
-                        <span className="text-xs uppercase tracking-wide text-[var(--color-muted)] shrink-0">
-                          {t.status}
-                        </span>
-                      </div>
+                      </LinkPending>
                     </Link>
                   </li>
                 )
@@ -425,25 +435,27 @@ export default async function HomePage() {
                     href={`/matches/${m.match_id}`}
                     className="flex items-center justify-between p-3 hover:bg-zinc-50"
                   >
-                    <div>
-                      <p className="font-medium">
-                        {m.side_a_label} vs {m.side_b_label}
-                        <span
-                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${TD_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
-                        >
-                          {TD_STATUS_LABEL[m.match_status] ?? m.match_status}
-                        </span>
-                      </p>
-                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                        {m.tournament_name} · Round {m.round}
-                        {m.deadline && (
-                          <> · due {new Date(m.deadline).toLocaleString()}</>
-                        )}
-                      </p>
-                    </div>
-                    <span className="text-sm text-[var(--color-accent)] hover:underline">
-                      Enter / override →
-                    </span>
+                    <LinkPending>
+                      <div>
+                        <p className="font-medium">
+                          {m.side_a_label} vs {m.side_b_label}
+                          <span
+                            className={`ml-2 text-xs rounded px-1.5 py-0.5 ${TD_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                          >
+                            {TD_STATUS_LABEL[m.match_status] ?? m.match_status}
+                          </span>
+                        </p>
+                        <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                          {m.tournament_name} · Round {m.round}
+                          {m.deadline && (
+                            <> · due {new Date(m.deadline).toLocaleString()}</>
+                          )}
+                        </p>
+                      </div>
+                      <span className="text-sm text-[var(--color-accent)] hover:underline">
+                        Enter / override →
+                      </span>
+                    </LinkPending>
                   </Link>
                 </li>
               ))}
@@ -474,25 +486,27 @@ export default async function HomePage() {
                     href={`/matches/${m.match_id}`}
                     className="flex items-center justify-between p-3 hover:bg-zinc-50"
                   >
-                    <div>
-                      <p className="font-medium">
-                        vs {m.opponent_label}
-                        <span
-                          className={`ml-2 text-xs rounded px-1.5 py-0.5 ${PLAYER_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
-                        >
-                          {PLAYER_STATUS_LABEL[m.match_status] ?? m.match_status}
-                        </span>
-                      </p>
-                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                        {m.tournament_name} · Round {m.round}
-                        {m.deadline && (
-                          <> · due {new Date(m.deadline).toLocaleString()}</>
-                        )}
-                      </p>
-                    </div>
-                    <span className="text-sm text-[var(--color-accent)] hover:underline">
-                      Enter result →
-                    </span>
+                    <LinkPending>
+                      <div>
+                        <p className="font-medium">
+                          vs {m.opponent_label}
+                          <span
+                            className={`ml-2 text-xs rounded px-1.5 py-0.5 ${PLAYER_STATUS_BADGE[m.match_status] ?? 'bg-zinc-100 text-[var(--color-muted)]'}`}
+                          >
+                            {PLAYER_STATUS_LABEL[m.match_status] ?? m.match_status}
+                          </span>
+                        </p>
+                        <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                          {m.tournament_name} · Round {m.round}
+                          {m.deadline && (
+                            <> · due {new Date(m.deadline).toLocaleString()}</>
+                          )}
+                        </p>
+                      </div>
+                      <span className="text-sm text-[var(--color-accent)] hover:underline">
+                        Enter result →
+                      </span>
+                    </LinkPending>
                   </Link>
                 </li>
               ))}

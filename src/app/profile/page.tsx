@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { formatDateUS } from '@/lib/dates'
 import { createClient } from '@/lib/supabase/server'
 import { changePassword, updateLoginEmail, updateProfile } from './actions'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Props = {
   searchParams: Promise<{
@@ -92,12 +93,9 @@ export default async function ProfilePage({ searchParams }: Props) {
               className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
             />
           </label>
-          <button
-            type="submit"
-            className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-          >
+          <SubmitButton variant="primary" pendingLabel="Sending…">
             Send confirmation link
-          </button>
+          </SubmitButton>
           <p className="text-xs text-[var(--color-muted)]">
             This is the email you use to log in. After you click the
             confirmation link, you&apos;ll sign in with the new email.{' '}
@@ -142,12 +140,9 @@ export default async function ProfilePage({ searchParams }: Props) {
               className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
             />
           </label>
-          <button
-            type="submit"
-            className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-          >
+          <SubmitButton variant="primary" pendingLabel="Changing…">
             Change password
-          </button>
+          </SubmitButton>
           <p className="text-xs text-[var(--color-muted)]">
             We ask for your current password to confirm it&apos;s really you.{' '}
             <strong>Your login email stays the same.</strong>
@@ -192,12 +187,9 @@ export default async function ProfilePage({ searchParams }: Props) {
               className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
             />
           </label>
-          <button
-            type="submit"
-            className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-          >
+          <SubmitButton variant="primary" pendingLabel="Saving…">
             Save
-          </button>
+          </SubmitButton>
         </form>
       </section>
     </div>

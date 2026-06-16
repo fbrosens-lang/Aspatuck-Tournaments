@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { setUserRole } from './actions'
+import { SubmitButton } from '@/components/SubmitButton'
 
 const ROLES = ['player', 'tournament_director', 'site_admin'] as const
 
@@ -90,12 +91,13 @@ export default async function AdminPage({ searchParams }: Props) {
                       </option>
                     ))}
                   </select>
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    variant="plain"
                     className="rounded bg-[var(--color-accent)] text-white px-3 py-1 hover:opacity-90"
+                    pendingLabel="Saving…"
                   >
                     Save
-                  </button>
+                  </SubmitButton>
                 </form>
               </td>
             </tr>
@@ -137,12 +139,9 @@ export default async function AdminPage({ searchParams }: Props) {
                   ))}
                 </select>
               </label>
-              <button
-                type="submit"
-                className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-              >
+              <SubmitButton variant="primary" pendingLabel="Saving…">
                 Save
-              </button>
+              </SubmitButton>
             </form>
           </li>
         ))}

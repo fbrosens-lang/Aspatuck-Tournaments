@@ -8,6 +8,7 @@ import {
 } from '@/app/tournaments/actions'
 import { TournamentRulesFields } from '@/components/TournamentRulesFields'
 import { SeedVisibilityToggle } from '@/components/SeedVisibilityToggle'
+import { SubmitButton } from '@/components/SubmitButton'
 import { RoundDeadlineRow } from './RoundDeadlineRow'
 
 type Props = {
@@ -188,12 +189,9 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
           </label>
         </div>
 
-        <button
-          type="submit"
-          className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-        >
+        <SubmitButton variant="primary" pendingLabel="Saving…">
           Save
-        </button>
+        </SubmitButton>
       </form>
 
       <section className="space-y-3">
@@ -247,12 +245,13 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
                   <form action={revokeTd}>
                     <input type="hidden" name="tournament_id" value={t.id} />
                     <input type="hidden" name="user_id" value={p.id} />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      variant="plain"
                       className="text-xs text-red-700 hover:underline"
+                      pendingLabel="Removing…"
                     >
                       Remove
-                    </button>
+                    </SubmitButton>
                   </form>
                 )}
               </li>
@@ -278,12 +277,13 @@ export default async function ManageTournamentPage({ params, searchParams }: Pro
               className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
             />
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            variant="plain"
             className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
+            pendingLabel="Adding…"
           >
             Add director
-          </button>
+          </SubmitButton>
         </form>
       </section>
     </div>

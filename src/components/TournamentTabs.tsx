@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { LinkPending } from '@/components/LinkPending'
 
 type Props = {
   tournamentId: string
@@ -54,7 +55,7 @@ export function TournamentTabs({ tournamentId, isTd }: Props) {
                 : 'rounded border border-[var(--color-border)] px-3 hover:bg-zinc-50')
             }
           >
-            {t.label}
+            <LinkPending>{t.label}</LinkPending>
           </Link>
         )
       })}

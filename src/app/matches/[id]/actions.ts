@@ -21,14 +21,14 @@ function parseSets(formData: FormData): SetPayload[] {
     const ga = Number(a)
     const gb = Number(b)
     if (!Number.isFinite(ga) || !Number.isFinite(gb)) continue
-    const ta = String(formData.get(`set_${i}_ta`) ?? '').trim()
-    const tb = String(formData.get(`set_${i}_tb`) ?? '').trim()
+    const tbScore = String(formData.get(`set_${i}_tb_score`) ?? '').trim()
+    const tbMatch = tbScore.match(/^(\d+)\s*[-–]\s*(\d+)$/)
     sets.push({
       set_number: i,
       games_a: ga,
       games_b: gb,
-      tiebreak_a: ta === '' ? null : Number(ta),
-      tiebreak_b: tb === '' ? null : Number(tb),
+      tiebreak_a: tbMatch ? Number(tbMatch[1]) : null,
+      tiebreak_b: tbMatch ? Number(tbMatch[2]) : null,
     })
   }
   return sets
@@ -88,4 +88,17 @@ export async function overrideScore(formData: FormData) {
   }
   revalidatePath(`/matches/${matchId}`)
   redirect(`/matches/${matchId}?ok=overridden`)
+}
+
+export async function tdClearMatchResult(formData: FormData) {
+  const matchId = String(formData.get('match_id') ?? '')
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_clear_match_result', {
+    p_match_id: matchId,
+  })
+  if (error) {
+    redirect(`/matches/${matchId}?error=${encodeURIComponent(error.message)}`)
+  }
+  revalidatePath(`/matches/${matchId}`)
+  redirect(`/matches/${matchId}?ok=cleared`)
 }

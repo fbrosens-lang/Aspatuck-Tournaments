@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { formatSetsScore } from '@/lib/format-sets'
 
 type Entry = {
   id: string
@@ -8,6 +9,14 @@ type Entry = {
   shortDisplay: string
   seed: number | null
   handicap: number | null
+}
+
+type MatchSet = {
+  set_number: number
+  games_a: number
+  games_b: number
+  tiebreak_a: number | null
+  tiebreak_b: number | null
 }
 
 type Match = {
@@ -20,6 +29,7 @@ type Match = {
   winner_entry_id: string | null
   status: 'pending' | 'reported' | 'confirmed' | 'disputed' | 'overridden'
   score_summary: string | null
+  sets?: MatchSet[]
 }
 
 const STATUS_CLASS: Record<Match['status'], string> = {
@@ -280,11 +290,16 @@ function MatchCard({ match, byId }: { match: Match; byId: Map<string, Entry> }) 
         handicap={b?.handicap ?? null}
         winner={!!winB && !!b}
       />
-      {match.score_summary && (
-        <p className="text-[11px] text-[var(--color-muted)] mt-1 truncate">
-          {match.score_summary}
-        </p>
-      )}
+      {(() => {
+        const sets = match.sets && match.sets.length > 0 ? match.sets : null
+        const text = sets ? formatSetsScore(sets) : match.score_summary
+        if (!text) return null
+        return (
+          <p className="text-[11px] text-[var(--color-muted)] mt-1 truncate">
+            {text}
+          </p>
+        )
+      })()}
       {match.status !== 'pending' && match.status !== 'confirmed' && (
         <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] mt-1">
           {match.status}

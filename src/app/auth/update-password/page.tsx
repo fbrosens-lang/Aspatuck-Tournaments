@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { updatePassword } from '@/app/auth/actions'
 import { createClient } from '@/lib/supabase/server'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Props = { searchParams: Promise<{ error?: string }> }
 
@@ -48,12 +49,13 @@ export default async function UpdatePasswordPage({ searchParams }: Props) {
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>
-        <button
-          type="submit"
+        <SubmitButton
+          variant="plain"
           className="w-full rounded bg-[var(--color-accent)] text-white py-2 hover:opacity-90"
+          pendingLabel="Updating…"
         >
           Update password
-        </button>
+        </SubmitButton>
       </form>
     </div>
   )

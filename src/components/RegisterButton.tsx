@@ -7,6 +7,7 @@ import {
   withdrawSelf,
 } from '@/app/tournaments/entry-actions'
 import { Combobox, type ComboboxItem } from '@/components/Combobox'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export type MyEntryState =
   | { kind: 'none' }
@@ -97,12 +98,13 @@ export function RegisterPanel({
         <form action={withdrawSelf}>
           <input type="hidden" name="tournament_id" value={tournamentId} />
           <input type="hidden" name="entry_id" value={me.entryId} />
-          <button
-            type="submit"
+          <SubmitButton
+            variant="plain"
             className="rounded border border-red-300 text-red-700 px-3 py-1.5 text-sm hover:bg-red-50"
+            pendingLabel="Withdrawing…"
           >
             Withdraw
-          </button>
+          </SubmitButton>
         </form>
       </div>
     )
@@ -118,12 +120,13 @@ export function RegisterPanel({
         <form action={withdrawSelf}>
           <input type="hidden" name="tournament_id" value={tournamentId} />
           <input type="hidden" name="entry_id" value={me.entryId} />
-          <button
-            type="submit"
+          <SubmitButton
+            variant="plain"
             className="rounded border border-red-300 text-red-700 px-3 py-1.5 text-sm hover:bg-red-50"
+            pendingLabel="Withdrawing…"
           >
             Withdraw
-          </button>
+          </SubmitButton>
         </form>
       </div>
     )
@@ -141,22 +144,24 @@ export function RegisterPanel({
             <form action={acceptInvite}>
               <input type="hidden" name="tournament_id" value={tournamentId} />
               <input type="hidden" name="team_id" value={me.teamId} />
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
+                pendingLabel="Accepting…"
               >
                 Accept
-              </button>
+              </SubmitButton>
             </form>
             <form action={declineInvite}>
               <input type="hidden" name="tournament_id" value={tournamentId} />
               <input type="hidden" name="team_id" value={me.teamId} />
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 className="rounded border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-zinc-50"
+                pendingLabel="Declining…"
               >
                 Decline
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>
@@ -187,12 +192,13 @@ export function RegisterPanel({
           <form action={withdrawSelf}>
             <input type="hidden" name="tournament_id" value={tournamentId} />
             <input type="hidden" name="entry_id" value={me.entryId} />
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded border border-red-300 text-red-700 px-3 py-1.5 text-sm hover:bg-red-50"
+              pendingLabel="Withdrawing…"
             >
               Withdraw team
-            </button>
+            </SubmitButton>
           </form>
         )}
       </div>
@@ -225,12 +231,13 @@ export function RegisterPanel({
           </p>
           <form action={registerSoloInDoubles}>
             <input type="hidden" name="tournament_id" value={tournamentId} />
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
+              pendingLabel="Signing up…"
             >
               Sign me up
-            </button>
+            </SubmitButton>
           </form>
         </div>
       )
@@ -257,12 +264,13 @@ export function RegisterPanel({
             an account, they&apos;ll see the invite on their home page. If
             not, their team entry will be waiting for them when they sign up.
           </p>
-          <button
-            type="submit"
+          <SubmitButton
+            variant="plain"
             className="rounded bg-[var(--color-accent)] text-white px-3 py-1.5 text-sm hover:opacity-90"
+            pendingLabel="Sending invite…"
           >
             Sign up &amp; invite partner
-          </button>
+          </SubmitButton>
         </form>
 
         {/* Solo path — for players who don't have a partner lined up.
@@ -273,12 +281,13 @@ export function RegisterPanel({
           <p className="text-sm">Don&apos;t have a partner?</p>
           <form action={registerSoloInDoubles}>
             <input type="hidden" name="tournament_id" value={tournamentId} />
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-zinc-50"
+              pendingLabel="Signing up…"
             >
               Sign up solo — pair me up later
-            </button>
+            </SubmitButton>
           </form>
           <p className="text-xs text-[var(--color-muted)]">
             You&apos;ll show up on the Roster as unpaired. The TD will match
@@ -300,12 +309,9 @@ export function RegisterPanel({
         same page if your plans change.
       </p>
       <input type="hidden" name="tournament_id" value={tournamentId} />
-      <button
-        type="submit"
-        className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-      >
+      <SubmitButton variant="primary" pendingLabel="Signing up…">
         Sign me up
-      </button>
+      </SubmitButton>
     </form>
   )
 }

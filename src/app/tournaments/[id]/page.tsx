@@ -8,6 +8,7 @@ import {
   loadMyEntryState,
 } from '@/app/tournaments/[id]/load-entries'
 import { withdrawSelf } from '@/app/tournaments/entry-actions'
+import { SubmitButton } from '@/components/SubmitButton'
 import type { ComboboxItem } from '@/components/Combobox'
 import { byLastName } from '@/lib/names'
 import { formatDateLong } from '@/lib/dates'
@@ -49,6 +50,29 @@ export default async function TournamentPage({ params, searchParams }: Props) {
     .eq('tournament_id', id)
     .order('round')
     .order('slot')
+
+  const matchIds = (matches ?? []).map((m) => m.id)
+  type SetRow = {
+    match_id: string
+    set_number: number
+    games_a: number
+    games_b: number
+    tiebreak_a: number | null
+    tiebreak_b: number | null
+  }
+  const { data: setRows } = matchIds.length
+    ? await supabase
+        .from('match_sets')
+        .select('match_id, set_number, games_a, games_b, tiebreak_a, tiebreak_b')
+        .in('match_id', matchIds)
+        .order('set_number')
+    : { data: [] as SetRow[] }
+  const setsByMatch = new Map<string, SetRow[]>()
+  for (const s of (setRows ?? []) as SetRow[]) {
+    const arr = setsByMatch.get(s.match_id) ?? []
+    arr.push(s)
+    setsByMatch.set(s.match_id, arr)
+  }
 
   const { data: roundDeadlineRows } = await supabase
     .from('tournament_round_deadlines')
@@ -195,6 +219,7 @@ export default async function TournamentPage({ params, searchParams }: Props) {
               ...m,
               status: m.status as 'pending' | 'reported' | 'confirmed' | 'disputed' | 'overridden',
               bracket: m.bracket as 'main' | 'consolation',
+              sets: setsByMatch.get(m.id),
             }))}
             entries={displayEntries}
             deadlineByRound={deadlineByRound}
@@ -254,12 +279,13 @@ export default async function TournamentPage({ params, searchParams }: Props) {
                       <form action={withdrawSelf}>
                         <input type="hidden" name="tournament_id" value={id} />
                         <input type="hidden" name="entry_id" value={e.id} />
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          variant="plain"
                           className="text-xs text-red-700 hover:underline shrink-0"
+                          pendingLabel="Withdrawing…"
                         >
                           Withdraw
-                        </button>
+                        </SubmitButton>
                       </form>
                     )}
                   </li>

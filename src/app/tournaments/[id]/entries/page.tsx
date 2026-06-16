@@ -23,6 +23,7 @@ import {
 import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
 import { Combobox, type ComboboxItem } from '@/components/Combobox'
 import { SeedVisibilityToggle } from '@/components/SeedVisibilityToggle'
+import { SubmitButton } from '@/components/SubmitButton'
 import { byLastName, lastName } from '@/lib/names'
 
 type Props = {
@@ -207,12 +208,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 autoFocus
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50 sm:col-span-4 justify-self-start"
+              pendingLabel="Entering…"
             >
               Enter as solo
-            </button>
+            </SubmitButton>
           </form>
         </section>
       )}
@@ -264,34 +266,36 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               <>
                 <form action={tdClearDraw}>
                   <input type="hidden" name="tournament_id" value={id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    variant="plain"
                     className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50"
-                    title="Delete the bracket and reopen sign-ups. Players can register again."
+                    pendingLabel="Undoing…"
                   >
                     Undo draw
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={tdRegenerateDraw}>
                   <input type="hidden" name="tournament_id" value={id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    variant="plain"
                     className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-100"
+                    pendingLabel="Regenerating…"
                   >
                     Regenerate draw
-                  </button>
+                  </SubmitButton>
                 </form>
               </>
             ) : (
               <form action={tdGenerateDraw}>
                 <input type="hidden" name="tournament_id" value={id} />
-                <button
-                  type="submit"
-                  className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+                <SubmitButton
+                  variant="plain"
+                  className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  pendingLabel="Generating…"
                   disabled={confirmedCount < 2}
                 >
                   Generate draw
-                </button>
+                </SubmitButton>
               </form>
             )}
           </div>
@@ -331,12 +335,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   submitOnPick
                 />
               </label>
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-4 justify-self-start"
+                pendingLabel="Entering…"
               >
                 Enter from directory
-              </button>
+              </SubmitButton>
             </form>
           </section>
 
@@ -362,12 +367,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   submitOnPick
                 />
               </label>
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50 sm:col-span-4 justify-self-start"
+                pendingLabel="Entering…"
               >
                 Enter account user
-              </button>
+              </SubmitButton>
             </form>
           </section>
 
@@ -411,12 +417,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                   className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
                 />
               </label>
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-4 justify-self-start"
+                pendingLabel="Adding…"
               >
                 Add and enter guest
-              </button>
+              </SubmitButton>
             </form>
           </section>
 
@@ -440,12 +447,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                     submitOnPick
                   />
                 </label>
-                <button
-                  type="submit"
+                <SubmitButton
+                  variant="plain"
                   className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50 sm:col-span-4 justify-self-start"
+                  pendingLabel="Entering…"
                 >
                   Enter guest
-                </button>
+                </SubmitButton>
               </form>
             </section>
           )}
@@ -536,13 +544,14 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                             />
                           </label>
                         )}
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          variant="plain"
                           disabled={otherUnpaired.length === 0}
                           className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed justify-self-start sm:justify-self-auto"
+                          pendingLabel="Pairing…"
                         >
                           Pair
-                        </button>
+                        </SubmitButton>
                       </form>
                     </li>
                   )
@@ -584,12 +593,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 ariaLabel="Partner"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-2 justify-self-start"
+              pendingLabel="Entering…"
             >
               Enter team
-            </button>
+            </SubmitButton>
           </form>
         </section>
       )}
@@ -621,12 +631,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 submitOnPick
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50 sm:col-span-4 justify-self-start"
+              pendingLabel="Entering…"
             >
               Enter as solo
-            </button>
+            </SubmitButton>
           </form>
         </section>
       )}
@@ -673,12 +684,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                     </li>
                   ))}
                 </ul>
-                <button
-                  type="submit"
+                <SubmitButton
+                  variant="plain"
                   className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+                  pendingLabel="Saving…"
                 >
                   Save handicaps
-                </button>
+                </SubmitButton>
               </form>
             </section>
           )
@@ -720,22 +732,24 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               ))}
             </ul>
             <div className="flex items-center gap-3 flex-wrap">
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+                pendingLabel="Saving…"
               >
                 Save seeds
-              </button>
+              </SubmitButton>
               {/* formAction overrides the parent form's saveSeeds action so
                   we don't need a second form. tdClearSeeds only reads
                   tournament_id; the seed_* inputs are ignored. */}
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 formAction={tdClearSeeds}
                 className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-100"
+                pendingLabel="Clearing…"
               >
                 Clear all seeds
-              </button>
+              </SubmitButton>
             </div>
           </form>
         </section>
@@ -816,36 +830,39 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                         <form action={tdAcceptTeamInvite}>
                           <input type="hidden" name="tournament_id" value={id} />
                           <input type="hidden" name="team_id" value={e.team_id!} />
-                          <button
-                            type="submit"
+                          <SubmitButton
+                            variant="plain"
                             className="min-h-11 inline-flex items-center px-2 text-xs text-emerald-700 hover:underline"
                             title="Confirm this team on behalf of the partner"
+                            pendingLabel="Accepting…"
                           >
                             Accept for partner
-                          </button>
+                          </SubmitButton>
                         </form>
                         <form action={tdDeclineTeamInvite}>
                           <input type="hidden" name="tournament_id" value={id} />
                           <input type="hidden" name="team_id" value={e.team_id!} />
-                          <button
-                            type="submit"
+                          <SubmitButton
+                            variant="plain"
                             className="min-h-11 inline-flex items-center px-2 text-xs text-red-700 hover:underline"
                             title="Decline this team on behalf of the partner"
+                            pendingLabel="Declining…"
                           >
                             Decline for partner
-                          </button>
+                          </SubmitButton>
                         </form>
                       </>
                     )}
                     <form action={tdWithdrawEntry}>
                       <input type="hidden" name="tournament_id" value={id} />
                       <input type="hidden" name="entry_id" value={e.id} />
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        variant="plain"
                         className="min-h-11 inline-flex items-center px-2 text-xs text-red-700 hover:underline"
+                        pendingLabel="Withdrawing…"
                       >
                         Withdraw
-                      </button>
+                      </SubmitButton>
                     </form>
                   </div>
                 </li>

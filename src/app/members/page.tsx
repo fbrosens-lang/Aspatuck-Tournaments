@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { byLastName } from '@/lib/names'
 import { formatDateUS } from '@/lib/dates'
 import { Combobox, type ComboboxItem } from '@/components/Combobox'
+import { SubmitButton } from '@/components/SubmitButton'
 import {
   createMember,
   deleteMember,
@@ -162,13 +163,14 @@ export default async function MembersPage({ searchParams }: Props) {
                 </div>
                 <form action={deleteOrphanProfile} className="shrink-0">
                   <input type="hidden" name="user_id" value={p.id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    variant="plain"
                     className="text-xs text-red-700 hover:underline"
                     title="Delete this account permanently"
+                    pendingLabel="Deleting…"
                   >
                     Delete account
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}
@@ -220,12 +222,13 @@ export default async function MembersPage({ searchParams }: Props) {
                 className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 sm:col-span-2 justify-self-start"
+              pendingLabel="Adding…"
             >
               Add member
-            </button>
+            </SubmitButton>
           </form>
         </details>
       )}
@@ -281,13 +284,14 @@ export default async function MembersPage({ searchParams }: Props) {
                                 name="club_member_id"
                                 value={m.id}
                               />
-                              <button
-                                type="submit"
+                              <SubmitButton
+                                variant="plain"
                                 className="text-xs text-[var(--color-muted)] hover:underline"
                                 title="Disconnect this directory entry from the account it was linked to"
+                                pendingLabel="…"
                               >
                                 unlink
-                              </button>
+                              </SubmitButton>
                             </form>
                           )}
                         </span>
@@ -310,12 +314,13 @@ export default async function MembersPage({ searchParams }: Props) {
                               ariaLabel="Account to link"
                             />
                           </div>
-                          <button
-                            type="submit"
+                          <SubmitButton
+                            variant="plain"
                             className="text-xs rounded border border-[var(--color-border)] px-2 py-1 hover:bg-zinc-50"
+                            pendingLabel="Linking…"
                           >
                             Link
-                          </button>
+                          </SubmitButton>
                         </form>
                       ) : (
                         <span className="text-xs text-[var(--color-muted)]">—</span>
@@ -329,12 +334,13 @@ export default async function MembersPage({ searchParams }: Props) {
                           className="inline"
                         >
                           <input type="hidden" name="id" value={m.id} />
-                          <button
-                            type="submit"
+                          <SubmitButton
+                            variant="plain"
                             className="text-xs text-red-700 hover:underline"
+                            pendingLabel="Removing…"
                           >
                             Remove
-                          </button>
+                          </SubmitButton>
                         </form>
                       </td>
                     )}
@@ -377,24 +383,26 @@ export default async function MembersPage({ searchParams }: Props) {
                     {canEdit && (
                       <form action={deleteMember} className="shrink-0">
                         <input type="hidden" name="id" value={m.id} />
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          variant="plain"
                           className="min-h-11 inline-flex items-center text-xs text-red-700 hover:underline px-2"
+                          pendingLabel="Removing…"
                         >
                           Remove
-                        </button>
+                        </SubmitButton>
                       </form>
                     )}
                   </div>
                   {canEdit && m.user_id && (
                     <form action={unlinkMember}>
                       <input type="hidden" name="club_member_id" value={m.id} />
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        variant="plain"
                         className="min-h-11 inline-flex items-center text-xs text-[var(--color-muted)] hover:underline"
+                        pendingLabel="Unlinking…"
                       >
                         Unlink account
-                      </button>
+                      </SubmitButton>
                     </form>
                   )}
                   {canEdit && !m.user_id && orphanItems.length > 0 && (
@@ -412,12 +420,13 @@ export default async function MembersPage({ searchParams }: Props) {
                           ariaLabel="Account to link"
                         />
                       </div>
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        variant="plain"
                         className="rounded border border-[var(--color-border)] px-3 py-2 text-sm hover:bg-zinc-50"
+                        pendingLabel="Linking…"
                       >
                         Link
-                      </button>
+                      </SubmitButton>
                     </form>
                   )}
                 </li>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Props = { searchParams: Promise<{ error?: string; email?: string }> }
 
@@ -46,12 +47,13 @@ export default async function SignupPage({ searchParams }: Props) {
             className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
           />
         </label>
-        <button
-          type="submit"
+        <SubmitButton
+          variant="plain"
           className="w-full rounded bg-[var(--color-accent)] text-white py-2 hover:opacity-90"
+          pendingLabel="Creating account…"
         >
           Create account
-        </button>
+        </SubmitButton>
       </form>
       <p className="mt-4 text-sm text-[var(--color-muted)]">
         Already have an account?{' '}

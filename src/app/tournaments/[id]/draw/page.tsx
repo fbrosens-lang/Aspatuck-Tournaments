@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isTdOfTournament } from '@/lib/auth'
 import { Bracket } from '@/components/Bracket'
+import { SubmitButton } from '@/components/SubmitButton'
 import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
 import { byLastName, lastName } from '@/lib/names'
 import {
@@ -44,6 +45,29 @@ export default async function DrawPage({ params, searchParams }: Props) {
     .eq('tournament_id', id)
     .order('round')
     .order('slot')
+
+  const matchIds = (matches ?? []).map((m) => m.id)
+  type SetRow = {
+    match_id: string
+    set_number: number
+    games_a: number
+    games_b: number
+    tiebreak_a: number | null
+    tiebreak_b: number | null
+  }
+  const { data: setRows } = matchIds.length
+    ? await supabase
+        .from('match_sets')
+        .select('match_id, set_number, games_a, games_b, tiebreak_a, tiebreak_b')
+        .in('match_id', matchIds)
+        .order('set_number')
+    : { data: [] as SetRow[] }
+  const setsByMatch = new Map<string, SetRow[]>()
+  for (const s of (setRows ?? []) as SetRow[]) {
+    const arr = setsByMatch.get(s.match_id) ?? []
+    arr.push(s)
+    setsByMatch.set(s.match_id, arr)
+  }
 
   const { data: roundDeadlineRows } = await supabase
     .from('tournament_round_deadlines')
@@ -118,34 +142,29 @@ export default async function DrawPage({ params, searchParams }: Props) {
         {!hasDraw && (
           <form action={generateDraw}>
             <input type="hidden" name="tournament_id" value={id} />
-            <button
-              type="submit"
-              className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-            >
+            <SubmitButton variant="primary" pendingLabel="Generating…">
               Generate draw
-            </button>
+            </SubmitButton>
           </form>
         )}
         {hasDraw && (
           <>
             <form action={regenerateDraw}>
               <input type="hidden" name="tournament_id" value={id} />
-              <button
-                type="submit"
+              <SubmitButton
+                variant="plain"
                 className="rounded border border-red-300 text-red-700 px-4 py-2 hover:bg-red-50"
+                pendingLabel="Regenerating…"
               >
                 Regenerate (destructive)
-              </button>
+              </SubmitButton>
             </form>
             {tournament.draw_status === 'seeded' && (
               <form action={publishDraw}>
                 <input type="hidden" name="tournament_id" value={id} />
-                <button
-                  type="submit"
-                  className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-                >
+                <SubmitButton variant="primary" pendingLabel="Publishing…">
                   Publish draw
-                </button>
+                </SubmitButton>
               </form>
             )}
           </>
@@ -159,6 +178,7 @@ export default async function DrawPage({ params, searchParams }: Props) {
               ...m,
               status: m.status as 'pending' | 'reported' | 'confirmed' | 'disputed' | 'overridden',
               bracket: m.bracket as 'main' | 'consolation',
+              sets: setsByMatch.get(m.id),
             }))}
             entries={
               tournament.solo_only
@@ -262,12 +282,13 @@ export default async function DrawPage({ params, searchParams }: Props) {
                           ))}
                         </select>
                       </label>
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        variant="plain"
                         className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 justify-self-start sm:justify-self-auto"
+                        pendingLabel="Filling…"
                       >
                         Fill bye
-                      </button>
+                      </SubmitButton>
                     </form>
                   </li>
                 ) : (
@@ -299,12 +320,13 @@ export default async function DrawPage({ params, searchParams }: Props) {
                           ))}
                         </select>
                       </label>
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        variant="plain"
                         className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 justify-self-start sm:justify-self-auto"
+                        pendingLabel="Filling…"
                       >
                         Fill bye
-                      </button>
+                      </SubmitButton>
                     </form>
                   </li>
                 ),
@@ -349,12 +371,13 @@ export default async function DrawPage({ params, searchParams }: Props) {
                 ))}
               </select>
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50"
+              pendingLabel="Swapping…"
             >
               Swap
-            </button>
+            </SubmitButton>
           </form>
 
           {tournament.kind === 'singles' && (
@@ -401,12 +424,9 @@ export default async function DrawPage({ params, searchParams }: Props) {
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" name="bypass" /> Bypass requirements
                   </label>
-                  <button
-                    type="submit"
-                    className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-                  >
+                  <SubmitButton variant="primary" pendingLabel="Substituting…">
                     Substitute
-                  </button>
+                  </SubmitButton>
                 </div>
                 <p className="sm:col-span-4 text-xs text-[var(--color-muted)]">
                   Use this for late entries or no-shows: pick a bracket position
@@ -452,12 +472,13 @@ export default async function DrawPage({ params, searchParams }: Props) {
                     ))}
                   </select>
                 </label>
-                <button
-                  type="submit"
+                <SubmitButton
+                  variant="plain"
                   className="rounded border border-[var(--color-border)] px-4 py-2 hover:bg-zinc-50"
+                  pendingLabel="Replacing…"
                 >
                   Replace
-                </button>
+                </SubmitButton>
               </form>
             </>
           )}

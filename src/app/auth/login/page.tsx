@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { login, requestPasswordReset } from '@/app/auth/actions'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Props = {
   searchParams: Promise<{
@@ -120,24 +121,26 @@ export default async function LoginPage({ searchParams }: Props) {
             to login. flex-col-reverse keeps the visual layout the user
             expects (Forgot password? above the Log in button). */}
         <div className="flex flex-col-reverse gap-3">
-          <button
-            type="submit"
+          <SubmitButton
+            variant="plain"
             formAction={login}
             className="w-full rounded bg-[var(--color-accent)] text-white py-2 hover:opacity-90"
+            pendingLabel="Logging in…"
           >
             Log in
-          </button>
+          </SubmitButton>
           <div className="text-right">
             {/* Submits the same form to the reset action — uses the email above.
                 formNoValidate so the required password field doesn't block it. */}
-            <button
-              type="submit"
+            <SubmitButton
+              variant="plain"
               formAction={requestPasswordReset}
               formNoValidate
               className="text-sm underline text-[var(--color-muted)] hover:opacity-80"
+              pendingLabel="Sending…"
             >
               Forgot password?
-            </button>
+            </SubmitButton>
           </div>
         </div>
       </form>

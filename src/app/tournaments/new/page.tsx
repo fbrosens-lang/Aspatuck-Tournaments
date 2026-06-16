@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { createTournament } from '@/app/tournaments/actions'
 import { TournamentRulesFields } from '@/components/TournamentRulesFields'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Props = { searchParams: Promise<{ error?: string }> }
 
@@ -69,12 +70,9 @@ export default async function NewTournamentPage({ searchParams }: Props) {
 
         <TournamentRulesFields mode="create" />
 
-        <button
-          type="submit"
-          className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
-        >
+        <SubmitButton variant="primary" pendingLabel="Creating…">
           Create
-        </button>
+        </SubmitButton>
       </form>
     </div>
   )

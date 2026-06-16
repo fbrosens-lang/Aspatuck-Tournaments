@@ -19,3 +19,13 @@ html, body {
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+a:has(> .link-pending[data-pending]),
+a:has(.link-pending[data-pending]) {
+  animation: link-pending-dim 1.4s ease-in-out 100ms infinite;
+}
+
+@keyframes link-pending-dim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
