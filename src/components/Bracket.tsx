@@ -1,7 +1,26 @@
 'use client'
 
 import { useRef } from 'react'
-import { formatSetsScore } from '@/lib/format-sets'
+
+/**
+ * Render a match's sets in the WINNER's perspective (winner's games first).
+ * The stored `games_a` / `games_b` are entry-A vs entry-B, so we flip when
+ * the winner is entry B. Used in the bracket to show "6-2, 6-0" under the
+ * winner's name in the next round (standard tennis bracket convention).
+ */
+function formatSetsWinnerFirst(sets: MatchSet[], winnerIsA: boolean): string {
+  return sets
+    .map((s) => {
+      const w = winnerIsA ? s.games_a : s.games_b
+      const l = winnerIsA ? s.games_b : s.games_a
+      const tbW = winnerIsA ? s.tiebreak_a : s.tiebreak_b
+      const tbL = winnerIsA ? s.tiebreak_b : s.tiebreak_a
+      const base = `${w}-${l}`
+      if (tbW != null && tbL != null) return `${base}(${tbW}-${tbL})`
+      return base
+    })
+    .join(', ')
+}
 
 type Entry = {
   id: string
@@ -34,10 +53,10 @@ type Match = {
 
 const STATUS_CLASS: Record<Match['status'], string> = {
   pending: 'border-[var(--color-border)]',
-  reported: 'border-amber-300 bg-amber-50',
+  reported: 'border-[var(--color-border)]',
   confirmed: 'border-[var(--color-border)]',
-  disputed: 'border-red-300 bg-red-50',
-  overridden: 'border-blue-300 bg-blue-50',
+  disputed: 'border-[var(--color-border)]',
+  overridden: 'border-[var(--color-border)]',
 }
 
 /**
@@ -105,6 +124,24 @@ export function Bracket({
   ).sort(([a], [b]) => a - b)
 
   const totalRounds = rounds.length
+  const maxRound = rounds.length > 0 ? rounds[rounds.length - 1][0] : 0
+
+  // For each completed match, the winner's score is shown UNDER the winner's
+  // name in the round they advance to (standard tennis bracket convention).
+  // For the final there is no next round, so the score appears under the
+  // winner's name on the same card.
+  const scoreUnderEntry = new Map<string, string>()
+  for (const m of main) {
+    if (!m.winner_entry_id) continue
+    const winnerIsA = m.winner_entry_id === m.entry_a_id
+    const sets = m.sets && m.sets.length > 0 ? m.sets : null
+    const score = sets
+      ? formatSetsWinnerFirst(sets, winnerIsA)
+      : m.score_summary
+    if (!score) continue
+    const displayRound = m.round === maxRound ? m.round : m.round + 1
+    scoreUnderEntry.set(`${m.winner_entry_id}|${displayRound}`, score)
+  }
 
   function jumpTo(round: number) {
     const node = columnRefs.current.get(round)
@@ -210,7 +247,11 @@ export function Bracket({
                             <div
                               className={`rounded border bg-white w-full ${STATUS_CLASS[m.status]}`}
                             >
-                              <MatchCard match={m} byId={byId} />
+                              <MatchCard
+                                match={m}
+                                byId={byId}
+                                scoreUnderEntry={scoreUnderEntry}
+                              />
                             </div>
 
                             {hasNextRound && (
@@ -271,11 +312,21 @@ export function Bracket({
   )
 }
 
-function MatchCard({ match, byId }: { match: Match; byId: Map<string, Entry> }) {
+function MatchCard({
+  match,
+  byId,
+  scoreUnderEntry,
+}: {
+  match: Match
+  byId: Map<string, Entry>
+  scoreUnderEntry: Map<string, string>
+}) {
   const a = match.entry_a_id ? byId.get(match.entry_a_id) : null
   const b = match.entry_b_id ? byId.get(match.entry_b_id) : null
   const winA = match.winner_entry_id === match.entry_a_id
   const winB = match.winner_entry_id === match.entry_b_id
+  const aScore = a ? scoreUnderEntry.get(`${a.id}|${match.round}`) ?? null : null
+  const bScore = b ? scoreUnderEntry.get(`${b.id}|${match.round}`) ?? null : null
   return (
     <a href={`/matches/${match.id}`} className="block px-2 sm:px-3 py-2 text-sm hover:bg-zinc-50">
       <Row
@@ -283,28 +334,15 @@ function MatchCard({ match, byId }: { match: Match; byId: Map<string, Entry> }) 
         seed={a?.seed ?? null}
         handicap={a?.handicap ?? null}
         winner={!!winA && !!a}
+        score={aScore}
       />
       <Row
         name={b?.shortDisplay ?? '—'}
         seed={b?.seed ?? null}
         handicap={b?.handicap ?? null}
         winner={!!winB && !!b}
+        score={bScore}
       />
-      {(() => {
-        const sets = match.sets && match.sets.length > 0 ? match.sets : null
-        const text = sets ? formatSetsScore(sets) : match.score_summary
-        if (!text) return null
-        return (
-          <p className="text-[11px] text-[var(--color-muted)] mt-1 truncate">
-            {text}
-          </p>
-        )
-      })()}
-      {match.status !== 'pending' && match.status !== 'confirmed' && (
-        <p className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] mt-1">
-          {match.status}
-        </p>
-      )}
     </a>
   )
 }
@@ -314,15 +352,17 @@ function Row({
   seed,
   handicap,
   winner,
+  score,
 }: {
   name: string
   seed: number | null
   handicap: number | null
   winner: boolean
+  score: string | null
 }) {
   return (
-    <div className={`flex items-center py-0.5 ${winner ? 'font-semibold' : ''}`}>
-      <span className="truncate">
+    <div className={`flex items-center gap-2 py-0.5 ${winner ? 'font-semibold' : ''}`}>
+      <span className="truncate flex-1 min-w-0">
         {name}
         {seed != null && (
           <span className="text-[var(--color-muted)] font-normal"> ({seed})</span>
@@ -331,6 +371,11 @@ function Row({
           <span className="text-[var(--color-muted)] font-normal"> ({handicap})</span>
         )}
       </span>
+      {score && (
+        <span className="text-[11px] text-[var(--color-muted)] font-normal shrink-0 tabular-nums">
+          {score}
+        </span>
+      )}
     </div>
   )
 }
