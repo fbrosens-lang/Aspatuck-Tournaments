@@ -182,7 +182,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
       )}
       {ok && (
         <p className="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
-          {ok === 'reported' && 'Score reported. Awaiting opponent confirmation if not yet confirmed.'}
+          {ok === 'reported' && 'Score saved. The winner has been advanced to the next round.'}
           {ok === 'overridden' && 'Score overridden.'}
           {ok === 'simple_saved' && 'Winner and score saved.'}
           {ok === 'withdrawn' && 'You have withdrawn from this tournament.'}
