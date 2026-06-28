@@ -192,25 +192,26 @@ export default async function DrawPage({ params, searchParams }: Props) {
       )}
 
       {(() => {
-        // First-round bye matches: round=1, main bracket, exactly one
-        // side populated. Built once here so the JSX below stays clean
-        // and we don't recompute on every form render. The bye winner's
-        // display name comes from the entries list we already loaded.
+        // First-round bye matches: round=1, main bracket, at least one
+        // side empty. Single bye = one side populated (the bye winner
+        // gets a free pass); double bye = both sides null (created
+        // when a bye winner was later withdrawn — _unwind_entry_from_matches
+        // clears both pointers). Both can be filled by td_pair_team_into_bye_slot.
         const byMain = (matches ?? []).filter((m) => m.bracket === 'main')
         const entryById = new Map(entries.map((e) => [e.id, e]))
         const byes = byMain
           .filter(
             (m) =>
-              m.round === 1 &&
-              ((m.entry_a_id && !m.entry_b_id) ||
-                (!m.entry_a_id && m.entry_b_id)),
+              m.round === 1 && !(m.entry_a_id && m.entry_b_id),
           )
           .map((m) => {
             const winnerId = m.entry_a_id ?? m.entry_b_id
             return {
               matchId: m.id,
               slot: m.slot,
-              byeWinner: winnerId ? entryById.get(winnerId)?.display ?? '—' : '—',
+              byeWinner: winnerId
+                ? entryById.get(winnerId)?.display ?? '—'
+                : '(open — both sides empty)',
             }
           })
         if (byes.length === 0) return null
