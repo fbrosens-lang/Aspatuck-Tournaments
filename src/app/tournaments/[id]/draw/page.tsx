@@ -6,9 +6,10 @@ import { Bracket } from '@/components/Bracket'
 import { SubmitButton } from '@/components/SubmitButton'
 import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
 import { byLastName, lastName } from '@/lib/names'
+import { Combobox, type ComboboxItem } from '@/components/Combobox'
 import {
   fillByeSlot,
-  fillByeSlotTeam,
+  fillByeSlotPairTeam,
   generateDraw,
   regenerateDraw,
   publishDraw,
@@ -214,6 +215,31 @@ export default async function DrawPage({ params, searchParams }: Props) {
           })
         if (byes.length === 0) return null
         const isDoubles = tournament.kind === 'doubles'
+        const isCalcutta = isDoubles && tournament.solo_only
+        // Doubles picker: union of unpaired solo entries already on the
+        // roster (prefixed "ue:") and the full club directory (prefixed
+        // "cm:"). The server action parses the prefix to call the RPC
+        // with the right argument, so a single Combobox can accept
+        // either kind without separate hidden fields. Available on any
+        // doubles tournament — captains can sign up solo in non-Calcutta
+        // doubles too, so the unpaired list isn't Calcutta-specific.
+        const unpairedEntries = isDoubles
+          ? entries.filter((e) => e.status === 'unpaired')
+          : []
+        const doublesPickerItems: ComboboxItem[] = isDoubles
+          ? [
+              ...unpairedEntries.map((e) => ({
+                value: `ue:${e.id}`,
+                label: e.display,
+                sublabel: 'unpaired solo',
+              })),
+              ...(clubMembers ?? []).map((m) => ({
+                value: `cm:${m.id}`,
+                label: m.full_name,
+                sublabel: m.email,
+              })),
+            ]
+          : []
         return (
           <section className="bg-white border border-[var(--color-border)] rounded p-4 space-y-3">
             <div>
@@ -229,9 +255,10 @@ export default async function DrawPage({ params, searchParams }: Props) {
                 {isDoubles && (
                   <>
                     {' '}
-                    If either partner is already on the roster, withdraw that
-                    entry on the Roster page first — adding the team here
-                    creates a fresh entry.
+                    Pick each partner from the club directory or from
+                    unpaired solos already on the roster. Unpaired entries
+                    are consumed when used, so they disappear from the
+                    roster once the team is formed.
                   </>
                 )}
               </p>
@@ -241,8 +268,12 @@ export default async function DrawPage({ params, searchParams }: Props) {
                 isDoubles ? (
                   <li key={b.matchId} className="py-3">
                     <form
-                      action={fillByeSlotTeam}
-                      className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_2fr_auto] gap-3 items-end"
+                      action={fillByeSlotPairTeam}
+                      className={`grid grid-cols-1 gap-3 items-end ${
+                        isCalcutta
+                          ? 'sm:grid-cols-[1fr_2fr_2fr_auto_auto]'
+                          : 'sm:grid-cols-[1fr_2fr_2fr_auto]'
+                      }`}
                     >
                       <input type="hidden" name="tournament_id" value={id} />
                       <input type="hidden" name="match_id" value={b.matchId} />
@@ -254,34 +285,38 @@ export default async function DrawPage({ params, searchParams }: Props) {
                       </div>
                       <label className="block">
                         <span className="text-sm">Captain</span>
-                        <select
-                          name="captain_club_member_id"
+                        <Combobox
+                          name="captain_ref"
+                          items={doublesPickerItems}
                           required
-                          className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-                        >
-                          <option value="">— pick from directory —</option>
-                          {clubMembers?.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.full_name} · {m.email}
-                            </option>
-                          ))}
-                        </select>
+                          placeholder="Type a name…"
+                          ariaLabel="Captain"
+                        />
                       </label>
                       <label className="block">
                         <span className="text-sm">Partner</span>
-                        <select
-                          name="partner_club_member_id"
+                        <Combobox
+                          name="partner_ref"
+                          items={doublesPickerItems}
                           required
-                          className="mt-1 w-full rounded border border-[var(--color-border)] px-3 py-2"
-                        >
-                          <option value="">— pick from directory —</option>
-                          {clubMembers?.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.full_name} · {m.email}
-                            </option>
-                          ))}
-                        </select>
+                          placeholder="Type a name…"
+                          ariaLabel="Partner"
+                        />
                       </label>
+                      {isCalcutta && (
+                        <label className="block">
+                          <span className="text-sm">Handicap</span>
+                          <input
+                            type="number"
+                            name="handicap"
+                            min={-40}
+                            max={40}
+                            step={1}
+                            aria-label="Team handicap"
+                            className="mt-1 w-20 rounded border border-[var(--color-border)] px-3 py-2"
+                          />
+                        </label>
+                      )}
                       <SubmitButton
                         variant="plain"
                         className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 justify-self-start sm:justify-self-auto"

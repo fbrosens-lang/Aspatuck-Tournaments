@@ -120,31 +120,62 @@ export async function fillByeSlot(formData: FormData) {
 }
 
 /**
- * Doubles twin of fillByeSlot: drops a brand-new team into a R1 bye slot,
- * creating the team + entry as part of the same transaction. See the
- * comment on fillByeSlot for the bracket-unwind semantics.
+ * Doubles equivalent of fillByeSlot: pairs two players AND drops the
+ * resulting team into a first-round bye in one atomic call. Each side
+ * (captain, partner) can be picked as either a brand-new club-directory
+ * member OR an existing unpaired roster entry. The form encodes each
+ * side as a single value of the form "cm:<uuid>" or "ue:<uuid>" so the
+ * picker can hand back either kind from one Combobox without separate
+ * hidden fields per branch. Handicap input is forwarded but the RPC
+ * rejects non-null values outside Calcutta (solo_only doubles).
  */
-export async function fillByeSlotTeam(formData: FormData) {
+export async function fillByeSlotPairTeam(formData: FormData) {
   const tid = String(formData.get('tournament_id') ?? '')
   const matchId = String(formData.get('match_id') ?? '')
-  const captainId = String(formData.get('captain_club_member_id') ?? '')
-  const partnerId = String(formData.get('partner_club_member_id') ?? '')
-  if (!matchId || !captainId || !partnerId) {
-    redirect(backUrl(tid, 'Pick both partners and a bye slot.'))
+  const captainRef = String(formData.get('captain_ref') ?? '')
+  const partnerRef = String(formData.get('partner_ref') ?? '')
+  const handicapRaw = String(formData.get('handicap') ?? '').trim()
+
+  if (!matchId || !captainRef || !partnerRef) {
+    redirect(backUrl(tid, 'Pick a captain, a partner, and a bye slot.'))
   }
-  if (captainId === partnerId) {
+  if (captainRef === partnerRef) {
     redirect(backUrl(tid, 'Captain and partner must be different.'))
   }
+  const cap = parsePickerRef(captainRef)
+  const par = parsePickerRef(partnerRef)
+  if (!cap || !par) {
+    redirect(backUrl(tid, 'Invalid picker selection.'))
+  }
+
+  let handicap: number | null = null
+  if (handicapRaw !== '') {
+    const n = Number(handicapRaw)
+    if (!Number.isInteger(n) || n < -40 || n > 40) {
+      redirect(backUrl(tid, 'Handicap must be a whole number from -40 to 40.'))
+    }
+    handicap = n
+  }
+
   const supabase = await createClient()
-  const { error } = await supabase.rpc('td_add_team_to_bye_slot', {
+  const { error } = await supabase.rpc('td_pair_team_into_bye_slot', {
     p_tournament_id: tid,
-    p_captain_club_member_id: captainId,
-    p_partner_club_member_id: partnerId,
     p_match_id: matchId,
+    p_captain_club_member_id: cap.kind === 'cm' ? cap.id : null,
+    p_captain_unpaired_entry_id: cap.kind === 'ue' ? cap.id : null,
+    p_partner_club_member_id: par.kind === 'cm' ? par.id : null,
+    p_partner_unpaired_entry_id: par.kind === 'ue' ? par.id : null,
+    p_handicap: handicap,
   })
   if (error) redirect(backUrl(tid, error.message))
   revalidatePath(`/tournaments/${tid}`)
   revalidatePath(`/tournaments/${tid}/draw`)
   revalidatePath(`/tournaments/${tid}/entries`)
   redirect(backUrl(tid, undefined, 'bye_filled'))
+}
+
+function parsePickerRef(raw: string): { kind: 'cm' | 'ue'; id: string } | null {
+  const m = /^(cm|ue):([0-9a-f-]{36})$/i.exec(raw)
+  if (!m) return null
+  return { kind: m[1] as 'cm' | 'ue', id: m[2] }
 }
