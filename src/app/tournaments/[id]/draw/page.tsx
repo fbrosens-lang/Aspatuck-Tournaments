@@ -8,6 +8,7 @@ import { loadEntriesForTournament } from '@/app/tournaments/[id]/load-entries'
 import { byLastName, lastName } from '@/lib/names'
 import { Combobox, type ComboboxItem } from '@/components/Combobox'
 import {
+  deepenBracket,
   fillByeSlot,
   fillByeSlotPairTeam,
   generateDraw,
@@ -119,6 +120,8 @@ export default async function DrawPage({ params, searchParams }: Props) {
           {ok === 'replaced' && 'Participant replaced.'}
           {ok === 'substituted' && 'Substitute placed.'}
           {ok === 'bye_filled' && 'Player added to the bye slot. The bye winner now has a first-round match.'}
+          {ok === 'deepened' &&
+            'Play-in round added. Every existing entry now has a bye in the new first round — drop the late team into one of those bye slots below.'}
           {ok === 'seeded' && 'Seeds saved.'}
         </p>
       )}
@@ -214,7 +217,42 @@ export default async function DrawPage({ params, searchParams }: Props) {
                 : '(open — both sides empty)',
             }
           })
-        if (byes.length === 0) return null
+        if (byes.length === 0) {
+          // Bracket is fully populated — no bye slot to drop a late team
+          // into. Offer the deepen flow: add a new R1 of byes (every
+          // existing entry becomes their own bye-winner) so the TD can
+          // then use bye-fill on the new slots. The RPC's preconditions
+          // (no scores, no withdrawals, etc.) are enforced server-side
+          // and surface verbatim in the error banner if violated.
+          if (!hasDraw) return null
+          return (
+            <section className="bg-white border border-[var(--color-border)] rounded p-4 space-y-3">
+              <div>
+                <h2 className="font-medium">No bye slots available</h2>
+                <p className="text-sm text-[var(--color-muted)] mt-1">
+                  Every first-round match has both sides filled. To add a
+                  late team without regenerating, deepen the bracket — a
+                  new first round of byes is inserted (every existing
+                  entry gets a bye into what is currently R1), and you
+                  can then drop the late team into one of those new bye
+                  slots in the standard way. Only works on a fresh,
+                  unplayed bracket; once anyone has played or withdrawn,
+                  regenerate instead.
+                </p>
+              </div>
+              <form action={deepenBracket}>
+                <input type="hidden" name="tournament_id" value={id} />
+                <SubmitButton
+                  variant="plain"
+                  className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90"
+                  pendingLabel="Deepening…"
+                >
+                  Deepen bracket (add play-in round)
+                </SubmitButton>
+              </form>
+            </section>
+          )
+        }
         const isDoubles = tournament.kind === 'doubles'
         const isCalcutta = isDoubles && tournament.solo_only
         // Doubles picker: union of unpaired solo entries already on the

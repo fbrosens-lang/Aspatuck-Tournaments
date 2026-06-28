@@ -179,3 +179,24 @@ function parsePickerRef(raw: string): { kind: 'cm' | 'ue'; id: string } | null {
   if (!m) return null
   return { kind: m[1] as 'cm' | 'ue', id: m[2] }
 }
+
+/**
+ * Add a play-in round to a fully populated bracket. Every existing
+ * match shifts up one round; a new R1 of byes is inserted where each
+ * existing entry is its own bye-winner. The TD then drops a late team
+ * into one of the new bye slots via the regular bye-fill flow.
+ * Refuses if any match has been played or any entry withdrawn — see
+ * the RPC for the exact preconditions.
+ */
+export async function deepenBracket(formData: FormData) {
+  const tid = String(formData.get('tournament_id') ?? '')
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('td_deepen_bracket', {
+    p_tournament_id: tid,
+  })
+  if (error) redirect(backUrl(tid, error.message))
+  revalidatePath(`/tournaments/${tid}`)
+  revalidatePath(`/tournaments/${tid}/draw`)
+  revalidatePath(`/tournaments/${tid}/entries`)
+  redirect(backUrl(tid, undefined, 'deepened'))
+}

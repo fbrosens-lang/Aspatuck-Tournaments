@@ -50,7 +50,7 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
 
   const { data: matchRows } = await supabase
     .from('matches')
-    .select('id, entry_a_id, entry_b_id')
+    .select('id, round, bracket, entry_a_id, entry_b_id')
     .eq('tournament_id', id)
   const drawExists = (matchRows?.length ?? 0) > 0
   const entryIdsInDraw = new Set<string>()
@@ -58,6 +58,15 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
     if (m.entry_a_id) entryIdsInDraw.add(m.entry_a_id)
     if (m.entry_b_id) entryIdsInDraw.add(m.entry_b_id)
   }
+  // Count first-round byes available on the Draw page so the post-draw
+  // unpaired banner can point at the right flow: bye-fill if any bye
+  // exists, deepen-the-bracket if every R1 slot is full.
+  const r1ByeCount = (matchRows ?? []).filter(
+    (m) =>
+      m.round === 1 &&
+      m.bracket === 'main' &&
+      !(m.entry_a_id && m.entry_b_id),
+  ).length
   const confirmedCount = entries.filter((e) => e.status === 'confirmed').length
   // Unpaired entries can't be drawn into the bracket — they need a
   // partner first. We surface them in the "no draw yet" copy below so
@@ -482,20 +491,40 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
               </h2>
               <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
                 {drawExists ? (
-                  <>
-                    The draw is already set, so pairing now also has to put
-                    the new team somewhere in the bracket. Head to the{' '}
-                    <Link
-                      href={`/tournaments/${id}/draw`}
-                      className="underline font-medium"
-                    >
-                      Draw page
-                    </Link>{' '}
-                    and use <em>Add team to a bye slot</em> — each
-                    unpaired solo shows up in the captain/partner pickers,
-                    and submitting pairs them and slots them into the bye
-                    in one step.
-                  </>
+                  r1ByeCount > 0 ? (
+                    <>
+                      The draw is already set, so pairing now also has to
+                      put the new team somewhere in the bracket. Head to
+                      the{' '}
+                      <Link
+                        href={`/tournaments/${id}/draw`}
+                        className="underline font-medium"
+                      >
+                        Draw page
+                      </Link>{' '}
+                      and use <em>Add team to a bye slot</em> — each
+                      unpaired solo shows up in the captain/partner
+                      pickers, and submitting pairs them and slots them
+                      into the bye in one step.
+                    </>
+                  ) : (
+                    <>
+                      The draw is already set and every first-round slot
+                      is full. Head to the{' '}
+                      <Link
+                        href={`/tournaments/${id}/draw`}
+                        className="underline font-medium"
+                      >
+                        Draw page
+                      </Link>{' '}
+                      and use <em>Deepen bracket</em> — that adds a new
+                      first round of byes (every existing entry gets a
+                      bye), then you can drop the new team into one of
+                      those slots and pair them in the same step. Only
+                      works if no matches have been played and no one has
+                      withdrawn; otherwise regenerate.
+                    </>
+                  )
                 ) : (
                   <>
                     These players signed up solo. Pair two of them into a
