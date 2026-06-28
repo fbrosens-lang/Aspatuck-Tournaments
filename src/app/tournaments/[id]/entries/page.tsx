@@ -461,11 +461,13 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
       )}
 
       {/* Unpaired players — solo sign-ups in a doubles tournament that
-          need a partner before the draw is generated. Shown for any
-          doubles tournament with at least one unpaired entry, including
-          Calcutta (solo_only) where pairing IS the whole TD job. The
-          Combobox for each row offers every OTHER unpaired entry (so
-          the TD can't pick the same player twice). */}
+          need a partner. Pre-draw the TD pairs them inline here. Once
+          the draw is set the underlying td_pair_solo_entries RPC
+          refuses (would leave a stranded confirmed entry not in any
+          bracket position), so we swap the inline pair form for a
+          pointer to the Draw page's bye-fill, which pairs AND inserts
+          into a bye in one step. The unpaired list still renders so
+          the TD can see who needs placing. */}
       {tournament.kind === 'doubles' &&
         (() => {
           const unpaired = entries.filter((e) => e.status === 'unpaired')
@@ -479,84 +481,116 @@ export default async function ManageEntriesPage({ params, searchParams }: Props)
                 </span>
               </h2>
               <p className="text-sm text-[var(--color-muted)] mt-1 mb-3">
-                These players signed up solo. Pair two of them into a team to
-                make a confirmed entry. The draw can&apos;t be generated while
-                anyone is still unpaired.
-                {unpaired.length === 1 && (
+                {drawExists ? (
                   <>
-                    {' '}
-                    Need one more solo sign-up before pairing is possible — or
-                    enter a team directly above.
+                    The draw is already set, so pairing now also has to put
+                    the new team somewhere in the bracket. Head to the{' '}
+                    <Link
+                      href={`/tournaments/${id}/draw`}
+                      className="underline font-medium"
+                    >
+                      Draw page
+                    </Link>{' '}
+                    and use <em>Add team to a bye slot</em> — each
+                    unpaired solo shows up in the captain/partner pickers,
+                    and submitting pairs them and slots them into the bye
+                    in one step.
+                  </>
+                ) : (
+                  <>
+                    These players signed up solo. Pair two of them into a
+                    team to make a confirmed entry. The draw can&apos;t be
+                    generated while anyone is still unpaired.
+                    {unpaired.length === 1 && (
+                      <>
+                        {' '}
+                        Need one more solo sign-up before pairing is
+                        possible — or enter a team directly above.
+                      </>
+                    )}
                   </>
                 )}
               </p>
-              <ul className="space-y-2">
-                {unpaired.map((u) => {
-                  const otherUnpaired: ComboboxItem[] = unpaired
-                    .filter((o) => o.id !== u.id)
-                    .map((o) => ({ value: o.id, label: o.display }))
-                  return (
+              {drawExists ? (
+                <ul className="space-y-1">
+                  {unpaired.map((u) => (
                     <li
                       key={u.id}
-                      className="rounded border border-[var(--color-border)] bg-white p-3"
+                      className="rounded border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
                     >
-                      <form
-                        action={tdPairSoloEntries}
-                        className={`grid grid-cols-1 gap-3 items-end ${
-                          tournament.solo_only
-                            ? 'sm:grid-cols-[1fr_2fr_auto_auto]'
-                            : 'sm:grid-cols-[1fr_2fr_auto]'
-                        }`}
+                      {u.display}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="space-y-2">
+                  {unpaired.map((u) => {
+                    const otherUnpaired: ComboboxItem[] = unpaired
+                      .filter((o) => o.id !== u.id)
+                      .map((o) => ({ value: o.id, label: o.display }))
+                    return (
+                      <li
+                        key={u.id}
+                        className="rounded border border-[var(--color-border)] bg-white p-3"
                       >
-                        <input type="hidden" name="tournament_id" value={id} />
-                        <input type="hidden" name="entry_a_id" value={u.id} />
-                        <div className="text-sm">
-                          <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                            Solo
+                        <form
+                          action={tdPairSoloEntries}
+                          className={`grid grid-cols-1 gap-3 items-end ${
+                            tournament.solo_only
+                              ? 'sm:grid-cols-[1fr_2fr_auto_auto]'
+                              : 'sm:grid-cols-[1fr_2fr_auto]'
+                          }`}
+                        >
+                          <input type="hidden" name="tournament_id" value={id} />
+                          <input type="hidden" name="entry_a_id" value={u.id} />
+                          <div className="text-sm">
+                            <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                              Solo
+                            </div>
+                            <div className="font-medium">{u.display}</div>
                           </div>
-                          <div className="font-medium">{u.display}</div>
-                        </div>
-                        <label className="block">
-                          <span className="text-sm">Pair with</span>
-                          <Combobox
-                            name="entry_b_id"
-                            items={otherUnpaired}
-                            required
-                            placeholder={
-                              otherUnpaired.length === 0
-                                ? 'No other unpaired players'
-                                : 'Type a name…'
-                            }
-                            ariaLabel="Partner to pair with"
-                          />
-                        </label>
-                        {tournament.solo_only && (
                           <label className="block">
-                            <span className="text-sm">Handicap</span>
-                            <input
-                              type="number"
-                              name="handicap"
-                              min={-40}
-                              max={40}
-                              step={1}
-                              aria-label="Team handicap"
-                              className="mt-1 w-20 rounded border border-[var(--color-border)] px-3 py-2"
+                            <span className="text-sm">Pair with</span>
+                            <Combobox
+                              name="entry_b_id"
+                              items={otherUnpaired}
+                              required
+                              placeholder={
+                                otherUnpaired.length === 0
+                                  ? 'No other unpaired players'
+                                  : 'Type a name…'
+                              }
+                              ariaLabel="Partner to pair with"
                             />
                           </label>
-                        )}
-                        <SubmitButton
-                          variant="plain"
-                          disabled={otherUnpaired.length === 0}
-                          className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed justify-self-start sm:justify-self-auto"
-                          pendingLabel="Pairing…"
-                        >
-                          Pair
-                        </SubmitButton>
-                      </form>
-                    </li>
-                  )
-                })}
-              </ul>
+                          {tournament.solo_only && (
+                            <label className="block">
+                              <span className="text-sm">Handicap</span>
+                              <input
+                                type="number"
+                                name="handicap"
+                                min={-40}
+                                max={40}
+                                step={1}
+                                aria-label="Team handicap"
+                                className="mt-1 w-20 rounded border border-[var(--color-border)] px-3 py-2"
+                              />
+                            </label>
+                          )}
+                          <SubmitButton
+                            variant="plain"
+                            disabled={otherUnpaired.length === 0}
+                            className="rounded bg-[var(--color-accent)] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed justify-self-start sm:justify-self-auto"
+                            pendingLabel="Pairing…"
+                          >
+                            Pair
+                          </SubmitButton>
+                        </form>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
             </section>
           )
         })()}
