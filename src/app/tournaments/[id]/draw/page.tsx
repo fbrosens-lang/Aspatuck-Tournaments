@@ -201,23 +201,53 @@ export default async function DrawPage({ params, searchParams }: Props) {
         // when a bye winner was later withdrawn — _unwind_entry_from_matches
         // clears both pointers). Both can be filled by td_pair_team_into_bye_slot.
         const byMain = (matches ?? []).filter((m) => m.bracket === 'main')
+        const r2BySlot = new Map<number, (typeof byMain)[number]>()
+        for (const m of byMain) if (m.round === 2) r2BySlot.set(m.slot, m)
         const entryById = new Map(entries.map((e) => [e.id, e]))
-        const byes = byMain
-          .filter(
-            (m) =>
-              m.round === 1 && !(m.entry_a_id && m.entry_b_id),
-          )
-          .map((m) => {
-            const winnerId = m.entry_a_id ?? m.entry_b_id
-            return {
-              matchId: m.id,
-              slot: m.slot,
-              byeWinner: winnerId
-                ? entryById.get(winnerId)?.display ?? '—'
-                : '(open — both sides empty)',
-            }
-          })
+        // Hide byes whose R2 match has already been played — the bye-fill
+        // RPC would reject them with the same R2 guard, and offering an
+        // un-submittable form is just noise. The TD's recourse there is
+        // withdraw + regenerate, not bye-fill.
+        const r1WithEmptySide = byMain.filter(
+          (m) => m.round === 1 && !(m.entry_a_id && m.entry_b_id),
+        )
+        const isFillable = (m: (typeof byMain)[number]) => {
+          const r2 = r2BySlot.get(Math.floor(m.slot / 2))
+          return !r2 || r2.status === 'pending'
+        }
+        const lockedCount = r1WithEmptySide.filter((m) => !isFillable(m)).length
+        const byes = r1WithEmptySide.filter(isFillable).map((m) => {
+          const winnerId = m.entry_a_id ?? m.entry_b_id
+          return {
+            matchId: m.id,
+            slot: m.slot,
+            byeWinner: winnerId
+              ? entryById.get(winnerId)?.display ?? '—'
+              : '(open — both sides empty)',
+          }
+        })
         if (byes.length === 0) {
+          // If every R1 slot has a real opponent, show the deepen card.
+          // If R1 has some empty slots but they're all locked by played
+          // R2 matches, deepen would refuse too (its "no R1 byes"
+          // precondition checks existence, not fillability) — so we tell
+          // the TD what's actually wrong instead of offering a button
+          // that'll error.
+          if (lockedCount > 0) {
+            return (
+              <section className="bg-white border border-amber-300 bg-amber-50 rounded p-4">
+                <h2 className="font-medium">No fillable bye slots</h2>
+                <p className="text-sm text-[var(--color-muted)] mt-1">
+                  {lockedCount}{' '}
+                  {lockedCount === 1 ? 'bye slot is' : 'bye slots are'}{' '}
+                  locked because the corresponding second-round match has
+                  already been played. To free one of them up, withdraw
+                  the team that advanced from that slot and regenerate
+                  the draw.
+                </p>
+              </section>
+            )
+          }
           // Bracket is fully populated — no bye slot to drop a late team
           // into. Offer the deepen flow: add a new R1 of byes (every
           // existing entry becomes their own bye-winner) so the TD can
